@@ -385,6 +385,12 @@ function normalizeFromFile(f) {
 
 function normalizeName(n) { return n?.toLowerCase().trim() || ''; }
 
+// Maps variant spellings → canonical name
+const ATHLETE_ALIASES = {
+  'maryam salehi': 'maryam salizadeh',
+};
+function resolveAlias(an) { return ATHLETE_ALIASES[an] || an; }
+
 function parseScore(v) {
   if (v == null || v === '') return null;
   const m = v.toString().trim().match(/^(\d+)/);
@@ -563,7 +569,7 @@ function processHR(rows) {
   for (let i = 1; i < rows.length; i++) {
     const r = rows[i];
     if (!r[C.FILE] || !r[C.SID]) continue;
-    const athlete = normalizeFromFile(r[C.FILE]);
+    const athlete = resolveAlias(normalizeFromFile(r[C.FILE]));
     const sid = r[C.SID];
     const key = `${athlete}||${sid}`;
     if (!sessions[key]) {
@@ -645,7 +651,7 @@ function processQuestionnaire(rows) {
     const r = rows[i];
     const name = r[Q.NAME]?.trim();
     if (!name) continue;
-    const an = normalizeName(name);
+    const an = resolveAlias(normalizeName(name));
     const wk = getWeekKeyFromQ(r[Q.MONTH], r[Q.WDAY]);
     if (!wk) continue;
     const ts = r[Q.TS] || '';
