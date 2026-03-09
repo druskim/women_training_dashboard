@@ -253,6 +253,7 @@
     <div class="chart-toggle-bar">
       <span>View:</span>
       <button class="chart-toggle-btn active" onclick="setChartMode('week', this)">This Week</button>
+      <button class="chart-toggle-btn" onclick="setChartMode('prev', this)">Past Week</button>
       <button class="chart-toggle-btn" onclick="setChartMode('month', this)">Past 4 Weeks</button>
       <button class="chart-toggle-btn" onclick="setChartMode('avg', this)">Average Week</button>
     </div>
@@ -913,6 +914,7 @@ function setChartMode(mode, btn) {
   makeLoadChart(_weekLabels, _hrWeekData, mode);
   const typeData = mode === 'avg'   ? aggregateTypeMinutes(_hrWeekData, _hrWeekData.length)
                  : mode === 'month' ? aggregateTypeMinutes(_hrWeekData, 4)
+                 : mode === 'prev'  ? aggregateTypeMinutes(_hrWeekData.slice(0, -1), 1)
                  :                   aggregateTypeMinutes(_hrWeekData, 1);
   if (Object.keys(typeData).length) {
     showChart('chart-types');
@@ -946,13 +948,16 @@ function makeLoadChart(labels, weekData, mode = 'week') {
   const zoneLegend = document.getElementById('zone-legend');
   const hint = document.getElementById('load-chart-hint');
 
-  if (mode === 'week' || mode === 'month') {
-    // Stacked bar by zone — 1 bar (this week) or 4 bars (past 4 weeks)
+  if (mode === 'week' || mode === 'prev' || mode === 'month') {
+    // Stacked bar by zone — 1 bar (this/prev week) or 4 bars (past 4 weeks)
     hint.style.display = '';
     zoneLegend.style.display = 'flex';
-    const n = mode === 'week' ? 1 : 4;
-    const slicedLabels = labels.slice(-n);
-    const slicedData   = weekData.slice(-n);
+    const slicedLabels = mode === 'prev' ? labels.slice(-2, -1)
+                       : mode === 'week'  ? labels.slice(-1)
+                       :                   labels.slice(-4);
+    const slicedData   = mode === 'prev' ? weekData.slice(-2, -1)
+                       : mode === 'week'  ? weekData.slice(-1)
+                       :                   weekData.slice(-4);
     const zones = ['grey','blue','green','yellow','red'];
     charts.load = new Chart(ctx, {
       type: 'bar',
