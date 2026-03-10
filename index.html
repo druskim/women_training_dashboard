@@ -768,7 +768,7 @@ function buildProfiles() {
     const curMEPs = hrWks[currentWk]?.meps ?? hrWks[latestHRWk]?.meps ?? 0;
     const curMissedLoad = calcMissedLoad(qWks[currentWk]?.missed || []);
     const curMinutes = (hrWks[currentWk]?.minutes ?? hrWks[latestHRWk]?.minutes ?? 0) + (curMissedLoad?.minutes || 0);
-    const curSessions = hrWks[currentWk]?.count ?? hrWks[latestHRWk]?.count ?? 0;
+    const curSessions = (hrWks[currentWk]?.count ?? hrWks[latestHRWk]?.count ?? 0) + (qWks[currentWk]?.missed?.length || 0);
     const latestQ = latestQWk ? qWks[latestQWk] : null;
     const hasQData = Object.keys(qWks).length > 0;
     const hasCurrentReport = !!(qWks[currentWk] || qWks[prevWk]);
