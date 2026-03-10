@@ -5,7 +5,7 @@
 const CONFIG = {
   // Direct URL to your live-updating HR CSV
   // e.g. a Dropbox/OneDrive/Google Drive direct-download link
-  HR_CSV_URL: 'https://canadiansportinstit-my.sharepoint.com/:x:/g/personal/sportlab_csiontario_ca/IQDLcEm2AgpMRbbeO6qx9szCAfPf78e7uEBUkk3SDvW2eLg?download=1',
+  HR_CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQOywZDLt7LYUfzftc0L6fiCCuSlKYCwRf7XBo4oP0C8sDIKsffzqd7TKzNIaxa2W_eWvLTXl8KP2wu/pub?output=csv',
 
   // Google Sheets questionnaire — publish the sheet as CSV:
   //   File → Share → Publish to web → Sheet1 → CSV → Publish
