@@ -219,6 +219,12 @@
     .inj-value { color: var(--text); }
     .card.flag.clickable { cursor: pointer; transition: background .15s; }
     .card.flag.clickable:hover { background: #222536; }
+
+    /* SHARE BUTTON */
+    .athlete-selector { display: flex; align-items: center; gap: 12px; }
+    #share-btn { background: rgba(255,255,255,.08); border: 1px solid var(--border); color: var(--text);
+                 padding: 7px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; white-space: nowrap; }
+    #share-btn:hover { background: rgba(255,255,255,.15); }
     .modal-empty { color: var(--muted); font-size: 14px; text-align: center; padding: 24px 0; }
   </style>
 </head>
@@ -282,6 +288,7 @@
       <select id="athlete-select" onchange="renderIndividual(this.value)">
         <option value="">— Select an athlete —</option>
       </select>
+      <button id="share-btn" style="display:none" onclick="copyAthleteLink()">Copy Athlete Link</button>
     </div>
 
     <div class="stats-row" id="ind-stats"></div>
@@ -359,6 +366,11 @@
 </main>
 
 <script>
+// ============================================================
+//  ATHLETE LINK MODE — detect ?athlete= param
+// ============================================================
+const ATHLETE_PARAM = new URLSearchParams(window.location.search).get('athlete');
+
 // ============================================================
 //  DARK THEME — Chart.js global defaults
 // ============================================================
@@ -1298,6 +1310,9 @@ function renderIndividual(an) {
     </div>
   `;
 
+  // Show share button (coach view only)
+  if (!ATHLETE_PARAM) document.getElementById('share-btn').style.display = '';
+
   // Load chart
   // Store for toggle re-renders
   _weekLabels = weekLabels;
@@ -1419,7 +1434,21 @@ async function loadData() {
         .map(a => `<option value="${a.an}">${a.displayName}</option>`)
         .join('');
 
-    renderTeam();
+    if (ATHLETE_PARAM) {
+      const an = resolveAlias(normalizeName(ATHLETE_PARAM));
+      document.querySelector('nav').style.display = 'none';
+      document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+      document.getElementById('tab-individual').classList.add('active');
+      document.getElementById('athlete-select').closest('.athlete-selector').style.display = 'none';
+      if (ATHLETES[an]) {
+        renderIndividual(an);
+      } else {
+        document.getElementById('ind-stats').innerHTML =
+          `<p style="color:var(--muted);padding:40px 0">Athlete not found. Check the link and try again.</p>`;
+      }
+    } else {
+      renderTeam();
+    }
 
     document.getElementById('last-updated').textContent =
       'Last updated: ' + new Date().toLocaleTimeString();
@@ -1435,6 +1464,21 @@ async function loadData() {
 }
 
 function refreshData() { loadData(); }
+
+// ============================================================
+//  COPY ATHLETE LINK
+// ============================================================
+
+function copyAthleteLink() {
+  const an = document.getElementById('athlete-select').value;
+  if (!an) return;
+  const url = window.location.origin + window.location.pathname + '?athlete=' + encodeURIComponent(an);
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('share-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy Athlete Link', 2000);
+  });
+}
 
 // ============================================================
 //  INJURY REPORT MODAL
