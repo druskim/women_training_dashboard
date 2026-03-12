@@ -303,7 +303,13 @@
 
     <div class="chart-grid-2">
       <div class="chart-card">
-        <h3>Weekly Training Load (MEPs) <span id="load-chart-hint" style="font-weight:400;font-size:11px;color:var(--muted)">— click a bar to see hours</span></h3>
+        <h3 style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span>Weekly Training Load <span id="load-chart-hint" style="font-weight:400;font-size:11px;color:var(--muted)">— click a bar to see details</span></span>
+          <span style="display:flex;gap:4px;flex-shrink:0">
+            <button id="metric-btn-meps"  class="chart-toggle-btn active" onclick="setLoadMetric('meps',this)"  style="padding:3px 10px;font-size:11px">MEPs</button>
+            <button id="metric-btn-hours" class="chart-toggle-btn"        onclick="setLoadMetric('hours',this)" style="padding:3px 10px;font-size:11px">Hours</button>
+          </span>
+        </h3>
         <canvas id="chart-load" style="cursor:pointer"></canvas>
         <div id="load-week-info" style="display:none;margin-top:10px;padding:10px 14px;background:#13161f;border-radius:6px;border-left:3px solid var(--red)">
           <span id="load-week-label" style="font-weight:600;font-size:13px"></span>
@@ -934,6 +940,7 @@ function openAthlete(an) {
 let charts = {};
 let chartMode = 'all';
 let hoursMode = 'week';
+let loadMetric = 'meps'; // 'meps' | 'hours'
 let _weekLabels = [];
 let _hrWeekData = [];
 let _indHours = { curMinutes: 0, curSessions: 0, avgMinutes: 0, weeksWithData: 0 };
@@ -1024,66 +1031,119 @@ function makeLoadChart(labels, weekData, mode = 'week') {
   const hint = document.getElementById('load-chart-hint');
 
   if (mode === 'week' || mode === 'prev' || mode === 'month') {
-    // Stacked bar by zone — 1 bar (this/prev week) or 4 bars (past 4 weeks)
-    hint.style.display = '';
-    zoneLegend.style.display = 'flex';
     const slicedLabels = mode === 'prev' ? labels.slice(-2, -1)
                        : mode === 'week'  ? labels.slice(-1)
                        :                   labels.slice(-4);
     const slicedData   = mode === 'prev' ? weekData.slice(-2, -1)
                        : mode === 'week'  ? weekData.slice(-1)
                        :                   weekData.slice(-4);
-    const zones = ['grey','blue','green','yellow','red'];
-    charts.load = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: slicedLabels,
-        datasets: zones.map(z => ({
-          label: z.charAt(0).toUpperCase() + z.slice(1),
-          data: slicedData.map(w => w?.mepsByZone?.[z] || 0),
-          backgroundColor: ZONE_COLORS[z],
-          stack: 'meps',
-        })),
-      },
-      options: {
-        responsive: true, maintainAspectRatio: true,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { stacked: true, grid: { display: false } },
-          y: { stacked: true, beginAtZero: true, title: { display: true, text: 'MEPs' } },
+
+    const onClick = (event, elements) => {
+      if (!elements.length) return;
+      const i = elements[0].index;
+      const w = slicedData[i];
+      const hrs  = w?.minutes ? (w.minutes / 60).toFixed(1) : '0';
+      const meps = w?.meps    ? w.meps.toLocaleString()     : '0';
+      document.getElementById('load-week-label').textContent = slicedLabels[i];
+      document.getElementById('load-week-hours').textContent = `${hrs} hrs trained`;
+      document.getElementById('load-week-meps').textContent  = `${meps} MEPs`;
+      document.getElementById('load-week-info').style.display = 'block';
+    };
+
+    if (loadMetric === 'hours') {
+      hint.style.display = '';
+      zoneLegend.style.display = 'none';
+      charts.load = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: slicedLabels,
+          datasets: [{ label: 'Hours', data: slicedData.map(w => w?.minutes ? parseFloat((w.minutes / 60).toFixed(2)) : 0),
+                       backgroundColor: '#e63946', borderRadius: 3 }],
         },
-        onClick: (event, elements) => {
-          if (!elements.length) return;
-          const i = elements[0].index;
-          const w = slicedData[i];
-          const hrs = w?.minutes ? (w.minutes / 60).toFixed(1) : '0';
-          const meps = w?.meps ? w.meps.toLocaleString() : '0';
-          document.getElementById('load-week-label').textContent = slicedLabels[i];
-          document.getElementById('load-week-hours').textContent = `${hrs} hrs trained`;
-          document.getElementById('load-week-meps').textContent = `${meps} MEPs`;
-          document.getElementById('load-week-info').style.display = 'block';
+        options: {
+          responsive: true, maintainAspectRatio: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false } },
+            y: { beginAtZero: true, title: { display: true, text: 'Hours' } },
+          },
+          onClick,
         },
-      },
-    });
+      });
+    } else {
+      hint.style.display = '';
+      zoneLegend.style.display = 'flex';
+      const zones = ['grey','blue','green','yellow','red'];
+      charts.load = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: slicedLabels,
+          datasets: zones.map(z => ({
+            label: z.charAt(0).toUpperCase() + z.slice(1),
+            data: slicedData.map(w => w?.mepsByZone?.[z] || 0),
+            backgroundColor: ZONE_COLORS[z],
+            stack: 'meps',
+          })),
+        },
+        options: {
+          responsive: true, maintainAspectRatio: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { stacked: true, grid: { display: false } },
+            y: { stacked: true, beginAtZero: true, title: { display: true, text: 'MEPs' } },
+          },
+          onClick,
+        },
+      });
+    }
   } else {
-    // avg mode — donut of aggregate zone distribution across all weeks
+    // avg mode
     hint.style.display = 'none';
     zoneLegend.style.display = 'none';
-    const zoneTotals = aggregateZones(weekData, weekData.length);
-    const zones = ['grey','blue','green','yellow','red'];
-    const zoneLabels = ['Grey 50–59%','Blue 60–69%','Green 70–79%','Yellow 80–89%','Red 90–100%'];
-    charts.load = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: zoneLabels,
-        datasets: [{ data: zones.map(z => zoneTotals[z]), backgroundColor: zones.map(z => ZONE_COLORS[z]), borderWidth: 1 }],
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { position: 'right', labels: { font: { size: 11 }, boxWidth: 12 } } },
-      },
-    });
+
+    if (loadMetric === 'hours') {
+      const validWeeks = weekData.slice(0, -1).filter(w => w && w.minutes > 0);
+      const avgHrs = validWeeks.length
+        ? parseFloat((validWeeks.reduce((s, w) => s + w.minutes, 0) / validWeeks.length / 60).toFixed(2)) : 0;
+      charts.load = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Avg / Week'],
+          datasets: [{ label: 'Hours', data: [avgHrs], backgroundColor: '#e63946', borderRadius: 3 }],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false } },
+            y: { beginAtZero: true, title: { display: true, text: 'Hours' } },
+          },
+        },
+      });
+    } else {
+      const zoneTotals = aggregateZones(weekData, weekData.length);
+      const zones = ['grey','blue','green','yellow','red'];
+      const zoneLabels = ['Grey 50–59%','Blue 60–69%','Green 70–79%','Yellow 80–89%','Red 90–100%'];
+      charts.load = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: zoneLabels,
+          datasets: [{ data: zones.map(z => zoneTotals[z]), backgroundColor: zones.map(z => ZONE_COLORS[z]), borderWidth: 1 }],
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'right', labels: { font: { size: 11 }, boxWidth: 12 } } },
+        },
+      });
+    }
   }
+}
+
+function setLoadMetric(metric, btn) {
+  loadMetric = metric;
+  document.getElementById('metric-btn-meps').classList.toggle('active',  metric === 'meps');
+  document.getElementById('metric-btn-hours').classList.toggle('active', metric === 'hours');
+  makeLoadChart(_weekLabels, _hrWeekData, chartMode);
 }
 
 function makeACWRChart(labels, acwrVals) {
@@ -1319,7 +1379,10 @@ function renderIndividual(an) {
   _weekLabels = weekLabels;
   _hrWeekData = hrWeekData;
   chartMode = 'week';
+  loadMetric = 'meps';
   document.querySelectorAll('.chart-toggle-bar .chart-toggle-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+  document.getElementById('metric-btn-meps').classList.add('active');
+  document.getElementById('metric-btn-hours').classList.remove('active');
 
   makeLoadChart(weekLabels, hrWeekData, 'week');
 
