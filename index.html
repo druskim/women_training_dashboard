@@ -1273,8 +1273,8 @@ function renderIndividual(an) {
   const latestQ = a.latestQWk ? a.weeks[a.latestQWk]?.q : null;
   const partCls = participationClass(a.latestPart);
 
-  // Compute avg hours from the trend window
-  const weeksWithData = hrWeekData.filter(w => w && w.minutes > 0);
+  // Compute avg hours from the trend window, excluding the current (incomplete) week
+  const weeksWithData = hrWeekData.slice(0, -1).filter(w => w && w.minutes > 0);
   const avgMinutes = weeksWithData.length
     ? weeksWithData.reduce((s, w) => s + w.minutes, 0) / weeksWithData.length : 0;
   hoursMode = 'week';
