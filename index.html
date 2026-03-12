@@ -826,7 +826,8 @@ function buildProfiles() {
     const latestQWk = Object.keys(qWks).sort().pop() || null;
     const latestHRWk = Object.keys(hrWks).sort().pop() || null;
 
-    const curACWR = weeks[currentWk]?.acwr ?? weeks[latestHRWk]?.acwr ?? null;
+    const latestCompletedHRWk = Object.keys(hrWks).filter(wk => wk < currentWk).sort().pop() || null;
+    const curACWR = weeks[prevWk]?.acwr ?? (latestCompletedHRWk ? weeks[latestCompletedHRWk]?.acwr : null) ?? null;
     const curMEPs = hrWks[currentWk]?.meps ?? hrWks[latestHRWk]?.meps ?? 0;
     // Use current week Q data if available, fall back to previous week (athletes often submit end-of-week)
     const curQWk = qWks[currentWk] ? currentWk : (qWks[prevWk] ? prevWk : null);
