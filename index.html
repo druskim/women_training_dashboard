@@ -436,7 +436,8 @@ function normalizeName(n) { return n?.toLowerCase().trim() || ''; }
 
 // Maps variant spellings → canonical name
 const ATHLETE_ALIASES = {
-  'maryam salizadeh': 'maryam salehizadeh',
+  'maryam salizadeh':  'maryam salehizadeh',
+  'maryam salehi':     'maryam salehizadeh',
 };
 function resolveAlias(an) { return ATHLETE_ALIASES[an] || an; }
 
