@@ -1550,7 +1550,7 @@ function copyAthleteLink() {
 // ============================================================
 
 function showInjuryReport() {
-  const flagged = Object.values(ATHLETES).filter(a => a.hasFlag);
+  const flagged = Object.values(ATHLETES).filter(a => a.hasFlag && a.hasCurrentReport);
   const modal   = document.getElementById('injury-modal');
   const body    = document.getElementById('injury-modal-body');
   const title   = document.getElementById('injury-modal-title');
