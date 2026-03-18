@@ -144,6 +144,15 @@
                   background: #13161f; border-radius: 6px; padding: 12px 14px;
                   border-left: 3px solid var(--red); white-space: pre-wrap; }
 
+    /* ROW COMMENT TOOLTIP */
+    #row-tooltip { position: fixed; display: none; background: var(--card);
+                   border: 1px solid var(--border); border-left: 3px solid var(--red);
+                   border-radius: 6px; padding: 10px 14px; font-size: 13px; line-height: 1.5;
+                   max-width: 320px; white-space: pre-wrap; pointer-events: none;
+                   z-index: 9999; box-shadow: 0 4px 16px rgba(0,0,0,.5); color: var(--text); }
+    #row-tooltip .tip-name { font-weight: 600; margin-bottom: 6px; color: var(--red); font-size: 12px;
+                             text-transform: uppercase; letter-spacing: .4px; }
+
     /* LOADING / ERROR */
     #loading { position: fixed; inset: 0; background: rgba(15,17,23,.92);
                display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -241,6 +250,7 @@
   </div>
 </div>
 
+<div id="row-tooltip"></div>
 <div id="loading">
   <div class="spinner"></div>
   <p id="loading-msg">Loading data…</p>
@@ -910,7 +920,11 @@ function renderTeam() {
         : `<span class="no-data">—</span>`;
 
     const hrs = a.curMinutes > 0 ? (a.curMinutes / 60).toFixed(1) + ' h' : '<span class="no-data">—</span>';
-    return `<tr onclick="openAthlete('${a.an}')" style="cursor:pointer">
+    const rawComment = a.weeks[a.latestQWk]?.q?.notes || '';
+    const safeComment = rawComment.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const safeName = a.displayName.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    return `<tr onclick="openAthlete('${a.an}')" style="cursor:pointer"
+        data-tip-name="${safeName}" data-tip-comment="${safeComment}">
       <td class="athlete-name">${a.displayName}</td>
       <td>${acwrBadge(a.curACWR)}</td>
       <td>${hrs}</td>
@@ -1147,35 +1161,58 @@ function setLoadMetric(metric, btn) {
   makeLoadChart(_weekLabels, _hrWeekData, chartMode);
 }
 
-function makeACWRChart(labels, acwrVals) {
+function makeACWRChart(labels, acwrVals, hoursVals) {
   destroyChart('acwr');
   const ctx = document.getElementById('chart-acwr').getContext('2d');
   charts.acwr = new Chart(ctx, {
-    type: 'line',
+    type: 'bar',
     data: {
       labels,
-      datasets: [{
-        label: 'ACWR',
-        data: acwrVals,
-        borderColor: '#CC0000',
-        backgroundColor: 'rgba(204,0,0,.1)',
-        pointBackgroundColor: acwrVals.map(acwrColor),
-        pointRadius: 5,
-        tension: 0.3,
-        fill: true,
-        spanGaps: true,
-      }],
+      datasets: [
+        {
+          type: 'line',
+          label: 'ACWR',
+          data: acwrVals,
+          borderColor: '#CC0000',
+          backgroundColor: 'rgba(204,0,0,.1)',
+          pointBackgroundColor: acwrVals.map(acwrColor),
+          pointRadius: 5,
+          tension: 0.3,
+          fill: true,
+          spanGaps: true,
+          yAxisID: 'y',
+          order: 1,
+        },
+        {
+          type: 'bar',
+          label: 'Volume (hrs)',
+          data: hoursVals,
+          backgroundColor: 'rgba(59,130,246,0.35)',
+          borderColor: 'rgba(59,130,246,0.7)',
+          borderWidth: 1,
+          borderRadius: 3,
+          yAxisID: 'y1',
+          order: 2,
+        },
+      ],
     },
     options: {
       responsive: true, maintainAspectRatio: true,
       plugins: {
-        legend: { display: false },
+        legend: { display: true, labels: { boxWidth: 12, font: { size: 11 } } },
         annotation: {},
       },
       scales: {
         y: {
           beginAtZero: true, max: 2.2,
           title: { display: true, text: 'ACWR' },
+          position: 'left',
+        },
+        y1: {
+          beginAtZero: true,
+          title: { display: true, text: 'Volume (hrs)' },
+          position: 'right',
+          grid: { drawOnChartArea: false },
         },
         x: { grid: { display: false } },
       },
@@ -1379,16 +1416,17 @@ function renderIndividual(an) {
   // Store for toggle re-renders
   _weekLabels = weekLabels;
   _hrWeekData = hrWeekData;
-  chartMode = 'week';
+  chartMode = 'month';
   loadMetric = 'meps';
-  document.querySelectorAll('.chart-toggle-bar .chart-toggle-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+  document.querySelectorAll('.chart-toggle-bar .chart-toggle-btn').forEach((b, i) => b.classList.toggle('active', i === 2));
   document.getElementById('metric-btn-meps').classList.add('active');
   document.getElementById('metric-btn-hours').classList.remove('active');
 
-  makeLoadChart(weekLabels, hrWeekData, 'week');
+  makeLoadChart(weekLabels, hrWeekData, 'month');
 
   // ACWR chart
-  makeACWRChart(weekLabels, acwrData);
+  const hoursData = hrWeekData.map(w => w && w.minutes > 0 ? parseFloat((w.minutes / 60).toFixed(2)) : null);
+  makeACWRChart(weekLabels, acwrData, hoursData);
 
   // Session type — default this week
   const typeMinutes = aggregateTypeMinutes(hrWeekData, 1);
@@ -1598,6 +1636,35 @@ if (CONFIG.REFRESH_MINUTES > 0) {
 }
 
 loadData();
+
+// ============================================================
+//  ROW COMMENT TOOLTIP
+// ============================================================
+
+const _rowTip = document.getElementById('row-tooltip');
+
+document.getElementById('team-tbody').addEventListener('mouseover', function(evt) {
+  const row = evt.target.closest('tr[data-tip-comment]');
+  if (!row || !row.dataset.tipComment) return;
+  _rowTip.innerHTML = `<div class="tip-name">${row.dataset.tipName}</div>${row.dataset.tipComment}`;
+  _rowTip.style.display = 'block';
+});
+
+document.getElementById('team-tbody').addEventListener('mousemove', function(evt) {
+  if (_rowTip.style.display === 'none') return;
+  const pad = 16;
+  let x = evt.clientX + pad, y = evt.clientY + pad;
+  if (x + _rowTip.offsetWidth  > window.innerWidth  - pad) x = evt.clientX - _rowTip.offsetWidth  - pad;
+  if (y + _rowTip.offsetHeight > window.innerHeight - pad) y = evt.clientY - _rowTip.offsetHeight - pad;
+  _rowTip.style.left = x + 'px';
+  _rowTip.style.top  = y + 'px';
+});
+
+document.getElementById('team-tbody').addEventListener('mouseout', function(evt) {
+  if (!evt.relatedTarget || !evt.relatedTarget.closest('#team-tbody')) {
+    _rowTip.style.display = 'none';
+  }
+});
 </script>
 </body>
 </html>
