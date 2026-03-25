@@ -305,9 +305,8 @@
 
     <div class="chart-toggle-bar">
       <span>View:</span>
-      <button class="chart-toggle-btn active" onclick="setChartMode('week', this)">This Week</button>
-      <button class="chart-toggle-btn" onclick="setChartMode('prev', this)">Past Week</button>
-      <button class="chart-toggle-btn" onclick="setChartMode('month', this)">Past 4 Weeks</button>
+      <button class="chart-toggle-btn active" onclick="setChartMode('prev', this)">Past Week</button>
+      <button class="chart-toggle-btn" onclick="setChartMode('month', this)">Past 8 Weeks</button>
       <button class="chart-toggle-btn" onclick="setChartMode('avg', this)">Average Week</button>
     </div>
 
@@ -1008,7 +1007,7 @@ function setChartMode(mode, btn) {
     typeData = Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, v / weeksWithData]));
     typeMode = 'avg';
   } else {
-    typeData = mode === 'month' ? aggregateTypeMinutes(_hrWeekData, 4)
+    typeData = mode === 'month' ? aggregateTypeMinutes(_hrWeekData, 8)
              : mode === 'prev'  ? aggregateTypeMinutes(_hrWeekData.slice(0, -1), 1)
              :                   aggregateTypeMinutes(_hrWeekData, 1);
     typeMode = 'week';
@@ -1048,10 +1047,10 @@ function makeLoadChart(labels, weekData, mode = 'week') {
   if (mode === 'week' || mode === 'prev' || mode === 'month') {
     const slicedLabels = mode === 'prev' ? labels.slice(-2, -1)
                        : mode === 'week'  ? labels.slice(-1)
-                       :                   labels.slice(-4);
+                       :                   labels.slice(-8);
     const slicedData   = mode === 'prev' ? weekData.slice(-2, -1)
                        : mode === 'week'  ? weekData.slice(-1)
-                       :                   weekData.slice(-4);
+                       :                   weekData.slice(-8);
 
     const onClick = (event, elements) => {
       if (!elements.length) return;
