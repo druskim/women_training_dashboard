@@ -205,6 +205,18 @@
     /* ACWR reference line label */
     .acwr-ref { font-size: 11px; color: var(--muted); margin-top: 6px; }
 
+    /* TREND ALERTS WIDGET */
+    .trend-alerts-card { background: var(--card); border-radius: 10px; padding: 14px 18px; }
+    .trend-alerts-card h3 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+    .trend-alert-list { display: flex; flex-direction: column; gap: 7px; }
+    .trend-alert { display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 8px 12px; border-radius: 6px; }
+    .trend-alert.red    { background: rgba(217,48,37,.12);  border-left: 3px solid #d93025; color: #f28b82; }
+    .trend-alert.yellow { background: rgba(224,168,0,.12);  border-left: 3px solid #e0a800; color: #fdd663; }
+    .trend-alert.blue   { background: rgba(52,152,219,.12); border-left: 3px solid #3498db; color: #7ab8f5; }
+    .trend-alert.grey   { background: rgba(155,155,155,.1); border-left: 3px solid #666;    color: var(--muted); }
+    .trend-alert.green  { background: rgba(30,168,104,.1);  border-left: 3px solid #1ea868; color: #6fcf97; }
+    .trend-alert-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: currentColor; }
+
     /* INJURY MODAL */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65);
                      z-index: 200; align-items: center; justify-content: center; padding: 24px; }
@@ -303,10 +315,12 @@
 
     <div class="stats-row" id="ind-stats"></div>
 
+    <div id="ind-trend-alerts" style="display:none;margin-bottom:18px"></div>
+
     <div class="chart-toggle-bar">
       <span>View:</span>
-      <button class="chart-toggle-btn active" onclick="setChartMode('prev', this)">Past Week</button>
-      <button class="chart-toggle-btn" onclick="setChartMode('month', this)">Past 8 Weeks</button>
+      <button class="chart-toggle-btn" onclick="setChartMode('prev', this)">Past Week</button>
+      <button class="chart-toggle-btn active" onclick="setChartMode('month', this)">Past 8 Weeks</button>
       <button class="chart-toggle-btn" onclick="setChartMode('avg', this)">Average Week</button>
     </div>
 
@@ -539,6 +553,28 @@ function decodeSessionType(raw) {
   return SESSION_TYPE_MAP[code] || raw.trim();
 }
 
+function decodeSessionTypes(raw) {
+  if (!raw) return ['Other'];
+  // Split on common separators: "and", "&", "/", ","
+  const parts = raw.split(/\s*(?:and|&|\/|,)\s*/i).map(p => p.trim()).filter(Boolean);
+  const types = new Set();
+  for (const part of parts) {
+    const code = part.charAt(0).toUpperCase();
+    if (SESSION_TYPE_MAP[code]) {
+      types.add(SESSION_TYPE_MAP[code]);
+    } else {
+      // Try extracting individual known letters (e.g. "WE")
+      const letters = part.toUpperCase().split('').filter(c => SESSION_TYPE_MAP[c]);
+      if (letters.length > 1) {
+        letters.forEach(c => types.add(SESSION_TYPE_MAP[c]));
+      } else {
+        types.add(part || 'Other');
+      }
+    }
+  }
+  return types.size ? [...types] : ['Other'];
+}
+
 // ============================================================
 //  MEP CALCULATION
 // ============================================================
@@ -689,8 +725,11 @@ function processHR(rows) {
     w.count += 1;
     if (s.type) {
       w.sessionTypes.push(s.type);
-      const decoded = decodeSessionType(s.type);
-      w.minutesByType[decoded] = (w.minutesByType[decoded] || 0) + s.minutes;
+      const types = decodeSessionTypes(s.type);
+      const splitMinutes = s.minutes / types.length;
+      for (const t of types) {
+        w.minutesByType[t] = (w.minutesByType[t] || 0) + splitMinutes;
+      }
     }
     for (const z of ['grey','blue','green','yellow','red']) w.mepsByZone[z] += s.mepsByZone[z];
   }
@@ -1344,6 +1383,98 @@ function toggleWBMetric(btn, idx) {
 }
 
 // ============================================================
+//  TREND ALERT ENGINE
+// ============================================================
+
+function computeTrendAlerts(acwrData, qWeekData, hrWeekData, avgMinutes) {
+  const alerts = [];
+
+  // Count consecutive weeks from the most recent backwards where condition holds.
+  // Breaks on null (no data) or condition failure.
+  function streak(arr, fn) {
+    let count = 0;
+    for (let i = arr.length - 1; i >= 0; i--) {
+      if (arr[i] != null && fn(arr[i])) count++;
+      else break;
+    }
+    return count;
+  }
+
+  // ACWR: high risk (>1.5 for 2+ weeks)
+  const acwrHighRisk = streak(acwrData, v => v > 1.5);
+  if (acwrHighRisk >= 2) {
+    alerts.push({ level: 'red', text: `High injury risk: ACWR above 1.5 for ${acwrHighRisk} consecutive week${acwrHighRisk > 1 ? 's' : ''}` });
+  } else {
+    // ACWR: elevated (>1.3 for 3+ weeks)
+    const acwrElevated = streak(acwrData, v => v > 1.3);
+    if (acwrElevated >= 3) {
+      alerts.push({ level: 'yellow', text: `Elevated training load: ACWR above 1.3 for ${acwrElevated} consecutive weeks` });
+    }
+  }
+
+  // ACWR: persistently low (<0.8 for 3+ weeks)
+  const acwrLow = streak(acwrData, v => v < 0.8);
+  if (acwrLow >= 3) {
+    alerts.push({ level: 'blue', text: `Undertraining: ACWR below 0.8 for ${acwrLow} consecutive weeks` });
+  }
+
+  // Wellbeing: poor composite (<3 out of 5) for 3+ weeks
+  const wbScores = qWeekData.map(wb => wbComposite(wb));
+  const wbLow = streak(wbScores, v => v < 3);
+  if (wbLow >= 2) {
+    const recentScores = wbScores.filter(v => v != null).slice(-wbLow);
+    const veryLow = recentScores.every(v => v < 2);
+    alerts.push({
+      level: veryLow ? 'red' : 'yellow',
+      text: `${veryLow ? 'Very low' : 'Poor'} wellbeing reported for ${wbLow} consecutive week${wbLow > 1 ? 's' : ''}`
+    });
+  }
+
+  // Training volume: consistently low (<60% of personal average for 3+ weeks)
+  // Exclude the current (potentially incomplete) week
+  if (avgMinutes > 30) {
+    const volStreak = streak(hrWeekData.slice(0, -1), w => w && w.minutes > 0 && w.minutes < avgMinutes * 0.6);
+    if (volStreak >= 3) {
+      alerts.push({ level: 'yellow', text: `Low training volume: below 60% of average for ${volStreak} consecutive weeks` });
+    }
+  }
+
+  // Missing wellbeing reports for 2+ consecutive weeks
+  const reportMissing = streak(qWeekData, wb => !wb || !WB_KEYS.some(k => wb[k] != null));
+  if (reportMissing >= 2) {
+    alerts.push({ level: 'grey', text: `No wellbeing report submitted for ${reportMissing} consecutive weeks` });
+  }
+
+  return alerts;
+}
+
+function renderTrendAlerts(acwrData, qWeekData, hrWeekData, avgMinutes) {
+  const container = document.getElementById('ind-trend-alerts');
+  const alerts = computeTrendAlerts(acwrData, qWeekData, hrWeekData, avgMinutes);
+  container.style.display = '';
+
+  if (!alerts.length) {
+    container.innerHTML = `
+      <div class="trend-alerts-card">
+        <h3>Trend Alerts</h3>
+        <div class="trend-alert-list">
+          <div class="trend-alert green"><div class="trend-alert-dot"></div>No intervention concerns detected in recent weeks</div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const rows = alerts.map(a =>
+    `<div class="trend-alert ${a.level}"><div class="trend-alert-dot"></div>${a.text}</div>`
+  ).join('');
+
+  container.innerHTML = `
+    <div class="trend-alerts-card">
+      <h3>Trend Alerts</h3>
+      <div class="trend-alert-list">${rows}</div>
+    </div>`;
+}
+
 //  INDIVIDUAL VIEW RENDERER
 // ============================================================
 
@@ -1378,6 +1509,8 @@ function renderIndividual(an) {
   hoursMode = 'week';
   const mergedCurMinutes = hrWeekData[hrWeekData.length - 1]?.minutes ?? 0;
   _indHours = { curMinutes: mergedCurMinutes, curSessions: a.curSessions, avgMinutes, weeksWithData: weeksWithData.length };
+
+  renderTrendAlerts(acwrData, qWeekData, hrWeekData, avgMinutes);
 
   document.getElementById('ind-stats').innerHTML = `
     <div class="stat-card">
@@ -1417,7 +1550,7 @@ function renderIndividual(an) {
   _hrWeekData = hrWeekData;
   chartMode = 'month';
   loadMetric = 'meps';
-  document.querySelectorAll('.chart-toggle-bar .chart-toggle-btn').forEach((b, i) => b.classList.toggle('active', i === 2));
+  document.querySelectorAll('.chart-toggle-bar .chart-toggle-btn').forEach((b, i) => b.classList.toggle('active', i === 1));
   document.getElementById('metric-btn-meps').classList.add('active');
   document.getElementById('metric-btn-hours').classList.remove('active');
 
