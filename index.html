@@ -269,6 +269,7 @@
 <nav>
   <button class="active" onclick="showTab('team', this)">Team Overview</button>
   <button onclick="showTab('individual', this)">Individual Athletes</button>
+  <button onclick="showTab('compare', this)">Compare Athletes</button>
 </nav>
 
 <main>
@@ -379,6 +380,54 @@
     <div class="detail-card" id="ind-notes" style="margin-bottom:24px">
       <h3>Latest Notes</h3>
       <p class="empty-state">No notes submitted</p>
+    </div>
+  </section>
+
+  <!-- ===== COMPARE ===== -->
+  <section id="tab-compare">
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Athletes</div>
+      <div id="cmp-athlete-chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px">
+      <div class="chart-toggle-bar" style="margin-bottom:0">
+        <span>Window:</span>
+        <button class="chart-toggle-btn active" onclick="setCmpWindow(4, this)">4 Weeks</button>
+        <button class="chart-toggle-btn" onclick="setCmpWindow(8, this)">8 Weeks</button>
+        <button class="chart-toggle-btn" onclick="setCmpWindow(12, this)">12 Weeks</button>
+      </div>
+    </div>
+
+    <div class="chart-grid-2" style="margin-bottom:20px">
+      <div class="chart-card">
+        <h3 style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span>Weekly Training Load</span>
+          <span style="display:flex;gap:4px;flex-shrink:0">
+            <button id="cmp-metric-meps"  class="chart-toggle-btn active" onclick="setCmpMetric('meps',this)"  style="padding:3px 10px;font-size:11px">MEPs</button>
+            <button id="cmp-metric-hours" class="chart-toggle-btn"        onclick="setCmpMetric('hours',this)" style="padding:3px 10px;font-size:11px">Hours</button>
+          </span>
+        </h3>
+        <canvas id="cmp-chart-load" style="max-height:280px"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>ACWR Comparison</h3>
+        <canvas id="cmp-chart-acwr" style="max-height:280px"></canvas>
+        <p class="acwr-ref">Optimal zone: 0.8 – 1.3 &nbsp;|&nbsp; Caution: 1.3 – 1.5 &nbsp;|&nbsp; High risk: &gt;1.5</p>
+      </div>
+    </div>
+
+    <div class="chart-grid-2">
+      <div class="chart-card">
+        <h3>Session Type Breakdown <span style="font-weight:400;font-size:11px;color:var(--muted)">(hours, selected window)</span></h3>
+        <canvas id="cmp-chart-types" style="max-height:300px"></canvas>
+        <p id="cmp-types-empty" class="empty-state" style="display:none">No session data</p>
+      </div>
+      <div class="chart-card">
+        <h3>Wellbeing Radar <span style="font-weight:400;font-size:11px;color:var(--muted)">(latest week)</span></h3>
+        <canvas id="cmp-chart-radar" style="max-height:300px"></canvas>
+        <p id="cmp-radar-empty" class="empty-state" style="display:none">No wellbeing data for selected athletes</p>
+      </div>
     </div>
   </section>
 
@@ -542,7 +591,7 @@ const SESSION_TYPE_MAP = {
 function decodeSessionType(raw) {
   if (!raw) return 'Other';
   const code = raw.trim().charAt(0).toUpperCase();
-  return SESSION_TYPE_MAP[code] || raw.trim();
+  return SESSION_TYPE_MAP[code] || 'Other';
 }
 
 function decodeSessionTypes(raw) {
@@ -560,7 +609,7 @@ function decodeSessionTypes(raw) {
       if (letters.length > 1) {
         letters.forEach(c => types.add(SESSION_TYPE_MAP[c]));
       } else {
-        types.add(part || 'Other');
+        types.add('Other');
       }
     }
   }
@@ -1571,6 +1620,10 @@ async function loadData() {
     ATHLETES = buildProfiles();
     if (DEMO_MODE) anonymizeAthletes();
 
+    // Populate compare tab
+    initCmpChips();
+    renderCompare();
+
     // Populate athlete selector
     const sel = document.getElementById('athlete-select');
     sel.innerHTML = '<option value="">— Select an athlete —</option>' +
@@ -1708,6 +1761,248 @@ document.getElementById('team-tbody').addEventListener('mouseout', function(evt)
     _rowTip.style.display = 'none';
   }
 });
+
+// ============================================================
+//  COMPARE TAB
+// ============================================================
+
+const CMP_COLORS = [
+  '#e63946','#3498db','#2ecc71','#f1c40f','#9b59b6',
+  '#e67e22','#1abc9c','#e91e63','#00bcd4','#ff5722','#8bc34a',
+];
+
+let cmpWindow  = 4;
+let cmpMetric  = 'meps';
+let cmpCharts  = {};
+let cmpSelected = new Set();
+let _cmpWeekLabels  = [];
+let _cmpAthleteData = [];
+
+function initCmpChips() {
+  const container = document.getElementById('cmp-athlete-chips');
+  const list = Object.values(ATHLETES).sort((a, b) => a.displayName.localeCompare(b.displayName));
+  cmpSelected = new Set(list.map(a => a.an));
+  container.innerHTML = list.map((a, i) => {
+    const col = CMP_COLORS[i % CMP_COLORS.length];
+    return `<button class="wb-chip active" data-an="${a.an}" data-col="${col}"
+      style="border-color:${col};color:${col}"
+      onclick="toggleCmpAthlete(this)">${a.displayName}</button>`;
+  }).join('');
+}
+
+function toggleCmpAthlete(btn) {
+  const an = btn.dataset.an;
+  if (cmpSelected.has(an)) {
+    cmpSelected.delete(an);
+    btn.classList.remove('active');
+  } else {
+    cmpSelected.add(an);
+    btn.classList.add('active');
+  }
+  renderCompare();
+}
+
+function setCmpWindow(weeks, btn) {
+  cmpWindow = weeks;
+  document.querySelectorAll('#tab-compare .chart-toggle-bar .chart-toggle-btn')
+    .forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCompare();
+}
+
+function setCmpMetric(metric, btn) {
+  cmpMetric = metric;
+  document.getElementById('cmp-metric-meps').classList.toggle('active',  metric === 'meps');
+  document.getElementById('cmp-metric-hours').classList.toggle('active', metric === 'hours');
+  makeCmpLoadChart();
+}
+
+function destroyCmpChart(key) {
+  if (cmpCharts[key]) { cmpCharts[key].destroy(); delete cmpCharts[key]; }
+}
+
+function renderCompare() {
+  const sortedAthletes = Object.values(ATHLETES)
+    .sort((a, b) => a.displayName.localeCompare(b.displayName));
+  const athletes = sortedAthletes.filter(a => cmpSelected.has(a.an));
+
+  if (!athletes.length) {
+    ['load','acwr','types','radar'].forEach(k => destroyCmpChart(k));
+    return;
+  }
+
+  const currentWk = getMondayOfWeek(new Date());
+  _cmpWeekLabels = [];
+  for (let w = cmpWindow - 1; w >= 0; w--) {
+    _cmpWeekLabels.push(fmtDate(addWeeks(currentWk, -w)));
+  }
+
+  // The color index must match the full sorted list so colors stay stable as athletes are toggled
+  _cmpAthleteData = athletes.map(a => {
+    const colorIdx = sortedAthletes.findIndex(s => s.an === a.an);
+    const color = CMP_COLORS[colorIdx % CMP_COLORS.length];
+    const weeks = [];
+    const acwr  = [];
+    for (let w = cmpWindow - 1; w >= 0; w--) {
+      const wk = addWeeks(currentWk, -w);
+      const hr = a.weeks[wk]?.hr || null;
+      const missedLoad = calcMissedLoad(a.weeks[wk]?.q?.missed || []);
+      weeks.push(mergeWithMissed(hr, missedLoad));
+      acwr.push(a.weeks[wk]?.acwr ?? null);
+    }
+    return { a, color, weeks, acwr };
+  });
+
+  makeCmpLoadChart();
+  makeCmpACWRChart();
+  makeCmpTypeChart();
+  makeCmpRadarChart();
+}
+
+function makeCmpLoadChart() {
+  destroyCmpChart('load');
+  const ctx = document.getElementById('cmp-chart-load').getContext('2d');
+  const datasets = _cmpAthleteData.map(({ a, color, weeks }) => ({
+    label: a.displayName,
+    data: weeks.map(w => {
+      if (!w) return null;
+      return cmpMetric === 'hours'
+        ? (w.minutes > 0 ? parseFloat((w.minutes / 60).toFixed(2)) : null)
+        : (w.meps > 0 ? w.meps : null);
+    }),
+    borderColor: color,
+    backgroundColor: color + '22',
+    pointBackgroundColor: color,
+    pointRadius: 4,
+    tension: 0.3,
+    fill: false,
+    spanGaps: true,
+  }));
+  cmpCharts.load = new Chart(ctx, {
+    type: 'line',
+    data: { labels: _cmpWeekLabels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { labels: { boxWidth: 12, font: { size: 11 } } } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { beginAtZero: true, title: { display: true, text: cmpMetric === 'hours' ? 'Hours' : 'MEPs' } },
+      },
+    },
+  });
+}
+
+function makeCmpACWRChart() {
+  destroyCmpChart('acwr');
+  const ctx = document.getElementById('cmp-chart-acwr').getContext('2d');
+  const datasets = _cmpAthleteData.map(({ a, color, acwr }) => ({
+    label: a.displayName,
+    data: acwr,
+    borderColor: color,
+    backgroundColor: color + '22',
+    pointBackgroundColor: color,
+    pointRadius: 4,
+    tension: 0.3,
+    fill: false,
+    spanGaps: true,
+  }));
+  cmpCharts.acwr = new Chart(ctx, {
+    type: 'line',
+    data: { labels: _cmpWeekLabels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { labels: { boxWidth: 12, font: { size: 11 } } } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { beginAtZero: true, max: 2.2, title: { display: true, text: 'ACWR' } },
+      },
+    },
+  });
+}
+
+function makeCmpTypeChart() {
+  destroyCmpChart('types');
+  const allTypes = new Set();
+  const athleteTypeMins = _cmpAthleteData.map(({ weeks }) => {
+    const mins = {};
+    for (const w of weeks) {
+      if (!w) continue;
+      for (const [t, m] of Object.entries(w.minutesByType || {})) {
+        mins[t] = (mins[t] || 0) + m;
+        allTypes.add(t);
+      }
+    }
+    return mins;
+  });
+
+  const emptyEl = document.getElementById('cmp-types-empty');
+  const canvas  = document.getElementById('cmp-chart-types');
+  if (!allTypes.size) {
+    canvas.style.display = 'none'; emptyEl.style.display = 'block'; return;
+  }
+  canvas.style.display = ''; emptyEl.style.display = 'none';
+
+  const types = [...allTypes].sort();
+  const ctx = canvas.getContext('2d');
+  const datasets = _cmpAthleteData.map(({ a, color }, i) => ({
+    label: a.displayName,
+    data: types.map(t => parseFloat(((athleteTypeMins[i][t] || 0) / 60).toFixed(2))),
+    backgroundColor: color + 'cc',
+    borderColor: color,
+    borderWidth: 1,
+    borderRadius: 3,
+  }));
+  cmpCharts.types = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: types, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { labels: { boxWidth: 12, font: { size: 11 } } } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { beginAtZero: true, title: { display: true, text: 'Hours' } },
+      },
+    },
+  });
+}
+
+function makeCmpRadarChart() {
+  destroyCmpChart('radar');
+  const emptyEl = document.getElementById('cmp-radar-empty');
+  const canvas  = document.getElementById('cmp-chart-radar');
+  const datasets = _cmpAthleteData
+    .filter(({ a }) => a.latestWB && WB_KEYS.some(k => a.latestWB[k] != null))
+    .map(({ a, color }) => ({
+      label: a.displayName,
+      data: WB_KEYS.map(k => a.latestWB[k] ?? null),
+      backgroundColor: color + '22',
+      borderColor: color,
+      pointBackgroundColor: color,
+      pointRadius: 3,
+      spanGaps: true,
+    }));
+
+  if (!datasets.length) {
+    canvas.style.display = 'none'; emptyEl.style.display = 'block'; return;
+  }
+  canvas.style.display = ''; emptyEl.style.display = 'none';
+
+  cmpCharts.radar = new Chart(canvas.getContext('2d'), {
+    type: 'radar',
+    data: { labels: WB_LABELS, datasets },
+    options: {
+      responsive: true,
+      scales: {
+        r: {
+          min: 0, max: 5,
+          ticks: { stepSize: 1, font: { size: 9 }, color: '#6b7280' },
+          pointLabels: { font: { size: 10 } },
+        },
+      },
+      plugins: { legend: { labels: { boxWidth: 12, font: { size: 11 } } } },
+    },
+  });
+}
 </script>
 </body>
 </html>
