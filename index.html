@@ -588,10 +588,33 @@ const SESSION_TYPE_MAP = {
   'N': 'Anaerobic Conditioning',
 };
 
+// A part is treated as a code only if the letter stands alone:
+// single char, or followed by a non-letter (space, dash, digit, end of string).
+// This prevents "Workout" → "Weights", etc.
+function isCodePrefix(part) {
+  return part.length === 1 || !/[a-zA-Z]/.test(part[1]);
+}
+
+// Keyword fallback for free-text entries that don't use letter codes
+const SESSION_KEYWORDS = [
+  [/^goalball\b/i,  'Goalball Practice'],
+  [/^weight/i,      'Weights'],
+  [/^workout/i,     'Weights'],
+];
+
+function keywordMatch(part) {
+  for (const [re, type] of SESSION_KEYWORDS) {
+    if (re.test(part)) return type;
+  }
+  return null;
+}
+
 function decodeSessionType(raw) {
   if (!raw) return 'Other';
-  const code = raw.trim().charAt(0).toUpperCase();
-  return SESSION_TYPE_MAP[code] || 'Other';
+  const trimmed = raw.trim();
+  const code = trimmed.charAt(0).toUpperCase();
+  if (SESSION_TYPE_MAP[code] && isCodePrefix(trimmed)) return SESSION_TYPE_MAP[code];
+  return keywordMatch(trimmed) || 'Other';
 }
 
 function decodeSessionTypes(raw) {
@@ -601,15 +624,20 @@ function decodeSessionTypes(raw) {
   const types = new Set();
   for (const part of parts) {
     const code = part.charAt(0).toUpperCase();
-    if (SESSION_TYPE_MAP[code]) {
+    if (SESSION_TYPE_MAP[code] && isCodePrefix(part)) {
       types.add(SESSION_TYPE_MAP[code]);
     } else {
-      // Try extracting individual known letters (e.g. "WE")
-      const letters = part.toUpperCase().split('').filter(c => SESSION_TYPE_MAP[c]);
-      if (letters.length > 1) {
-        letters.forEach(c => types.add(SESSION_TYPE_MAP[c]));
+      const kw = keywordMatch(part);
+      if (kw) {
+        types.add(kw);
       } else {
-        types.add('Other');
+        // Try extracting individual known letters (e.g. "WE")
+        const letters = part.toUpperCase().split('').filter(c => SESSION_TYPE_MAP[c]);
+        if (letters.length > 1) {
+          letters.forEach(c => types.add(SESSION_TYPE_MAP[c]));
+        } else {
+          types.add('Other');
+        }
       }
     }
   }
