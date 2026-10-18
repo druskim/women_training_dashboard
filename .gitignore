@@ -1,0 +1,4 @@
+# IPP source workbook — the dashboard only needs the generated ipp_data.json
+*.xlsx
+~$*.xlsx
+__pycache__/

@@ -1,11 +1,12 @@
 """
 sync_hr_data.py
 ===============
-Downloads the HR data CSV from a SharePoint "anyone with the link" URL
-and pushes it to the GitHub repo using git CLI (handles large files).
+Downloads the HR data CSV from a SharePoint "anyone with the link" URL,
+converts the Individual Performance Plan workbook to ipp_data.json, and pushes
+both to the GitHub repo using git CLI (handles large files).
 
 Requirements:
-    pip install requests
+    pip install -r requirements.txt
     git must be installed and on PATH
 
 Usage:
@@ -20,6 +21,8 @@ import subprocess
 
 import requests
 
+from ipp_to_json import DEFAULT_XLSX, JSON_PATH as IPP_JSON_PATH, to_json_text, workbook_to_data
+
 # ── Configuration ─────────────────────────────────────────────────────────────
 
 SHAREPOINT_URL = (
@@ -28,9 +31,14 @@ SHAREPOINT_URL = (
     "?e=9ga0rl"
 )
 
+# IPP workbook: paste its SharePoint "anyone with the link" URL here once it's shared.
+# Until then the workbook is read from IPP_LOCAL_PATH next to this script.
+IPP_SHAREPOINT_URL = ""
+IPP_LOCAL_PATH     = DEFAULT_XLSX
+
 GITHUB_REPO    = "druskim/women_training_dashboard"
 CSV_PATH       = "hr_data.csv"   # path inside the repo
-COMMIT_MESSAGE = "chore: auto-sync HR data from SharePoint"
+COMMIT_MESSAGE = "chore: auto-sync HR data and IPPs from SharePoint"
 
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 
@@ -41,7 +49,8 @@ REPO_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def download_sharepoint_file(sharing_url: str) -> bytes:
     """Downloads a SharePoint 'anyone with the link' file via &download=1."""
-    url = sharing_url + "&download=1"
+    sep = "&" if "?" in sharing_url else "?"
+    url = sharing_url + sep + "download=1"
     print(f"  Fetching: {url}")
     resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"},
                         allow_redirects=True, timeout=120)
@@ -79,28 +88,29 @@ def git(args: list[str], **kwargs) -> subprocess.CompletedProcess:
     return result
 
 
-def push_via_git(csv_content: str, path: str, message: str, token: str, repo_name: str) -> None:
-    """Write file locally and push via git CLI using the token for auth."""
-    # Write the CSV
-    full_path = os.path.join(REPO_DIR, path)
-    with open(full_path, "w", encoding="utf-8", newline="") as f:
-        f.write(csv_content)
-    print(f"  Written: {full_path}")
+def push_via_git(files: dict[str, str], message: str, token: str, repo_name: str) -> None:
+    """Write files ({repo path: text}) locally and push via git CLI using the token for auth."""
+    paths = list(files)
+    for path, content in files.items():
+        full_path = os.path.join(REPO_DIR, path)
+        with open(full_path, "w", encoding="utf-8", newline="") as f:
+            f.write(content)
+        print(f"  Written: {full_path}")
 
     # Check for changes
     result = subprocess.run(
-        ["git", "status", "--porcelain", path],
+        ["git", "status", "--porcelain", *paths],
         cwd=REPO_DIR, capture_output=True, text=True
     )
     if not result.stdout.strip():
-        print("  No changes — file is identical to last push.")
+        print("  No changes — files are identical to last push.")
         return
 
     # Temporarily embed token in remote URL for auth, then restore it
     remote_url     = f"https://x-access-token:{token}@github.com/{repo_name}.git"
     clean_url      = f"https://github.com/{repo_name}.git"
 
-    git(["add", path])
+    git(["add", *paths])
     git(["commit", "-m", message])
 
     # Detect current branch
@@ -119,7 +129,27 @@ def push_via_git(csv_content: str, path: str, message: str, token: str, repo_nam
         subprocess.run(["git", "remote", "set-url", "origin", clean_url],
                        cwd=REPO_DIR, capture_output=True)
 
-    print(f"  Pushed '{path}' → {repo_name} ({branch})")
+    print(f"  Pushed {', '.join(paths)} → {repo_name} ({branch})")
+
+
+def load_ipp_json() -> str | None:
+    """Builds ipp_data.json text from the IPP workbook. Returns None on failure so the
+    HR sync still goes ahead (the dashboard keeps the last pushed plans)."""
+    try:
+        if IPP_SHAREPOINT_URL:
+            raw = download_sharepoint_file(IPP_SHAREPOINT_URL)
+        else:
+            path = os.path.join(REPO_DIR, IPP_LOCAL_PATH)
+            print(f"  No IPP_SHAREPOINT_URL set — reading local file {path}")
+            with open(path, "rb") as f:
+                raw = f.read()
+        data = workbook_to_data(raw)
+        filled = sum(a["hasContent"] for a in data["athletes"])
+        print(f"  {len(data['athletes'])} athletes on roster ({filled} with plan content)")
+        return to_json_text(data)
+    except Exception as e:
+        print(f"  WARNING: skipping IPP sync — {e}")
+        return None
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -139,8 +169,14 @@ def main():
     csv_text = to_csv_text(raw)
     print(f"  {csv_text.count(chr(10)):,} rows")
 
-    print("Step 3 — Pushing to GitHub via git...")
-    push_via_git(csv_text, CSV_PATH, COMMIT_MESSAGE, GITHUB_TOKEN, GITHUB_REPO)
+    print("Step 3 — Converting IPP workbook...")
+    files = {CSV_PATH: csv_text}
+    ipp_json = load_ipp_json()
+    if ipp_json is not None:
+        files[IPP_JSON_PATH] = ipp_json
+
+    print("Step 4 — Pushing to GitHub via git...")
+    push_via_git(files, COMMIT_MESSAGE, GITHUB_TOKEN, GITHUB_REPO)
 
     print("Done.")
 

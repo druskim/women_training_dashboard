@@ -1,5 +1,2 @@
-<<<<<<< HEAD
 requests>=2.31
-=======
-requests>=2.31
->>>>>>> b53491ee865295ae7f2f716056d9dac933973b76
+openpyxl>=3.1

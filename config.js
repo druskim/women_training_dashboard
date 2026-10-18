@@ -6,6 +6,9 @@ const CONFIG = {
   // HR data CSV auto-synced from SharePoint by sync_hr_data.py
   HR_CSV_URL: 'https://raw.githubusercontent.com/druskim/women_training_dashboard/main/hr_data.csv',
 
+  // Individual Performance Plans + roster, generated from the IPP workbook by sync_hr_data.py
+  IPP_JSON_URL: 'https://raw.githubusercontent.com/druskim/women_training_dashboard/main/ipp_data.json',
+
   // Google Sheets questionnaire — publish the sheet as CSV:
   //   File → Share → Publish to web → Sheet1 → CSV → Publish
   //   Paste the resulting URL here

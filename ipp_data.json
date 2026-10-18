@@ -1,0 +1,2226 @@
+{
+ "athletes": [
+  {
+   "sheet": "Amy",
+   "hasContent": false,
+   "plan": {
+    "header": {
+     "athlete": null,
+     "position": null,
+     "trainingBlock": null,
+     "dateCompleted": null,
+     "nextReview": null
+    },
+    "offensive": [
+     {
+      "component": "Spin / Non Spin Starting Position / Set Up",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 1",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 2",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 3",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 4",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Steps",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Back Swing",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Release",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin / Non Spin Follow Through",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Accuracy",
+      "rating": null,
+      "priority": null
+     }
+    ],
+    "defensive": [
+     {
+      "component": "Ready position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Alignment",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "First movement / reaction",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Body Position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Extension / length",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Hand / arm position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Leg Position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Range",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Hold Position / Rollng forward / backwards",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Ball control",
+      "rating": null,
+      "priority": null
+     }
+    ],
+    "priorities": [
+     [],
+     [],
+     []
+    ],
+    "reflection": null,
+    "checkin": {
+     "actualHrs": null,
+     "targetHrs": null,
+     "hoursStatus": null,
+     "loadStatus": null,
+     "acwrValue": null,
+     "acwrStatus": null,
+     "participation": null,
+     "wellbeing": null
+    },
+    "dashboardReflection": null,
+    "nextAction": null,
+    "coachFeedback": null,
+    "ist": [
+     {
+      "discipline": "ATHLETIC THERAPY\nAlice Sobiesiak",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     },
+     {
+      "discipline": "STRENGTH & CONDITIONING\nJustin Staffiere",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     },
+     {
+      "discipline": "MENTAL PERFORMANCE\nChloe Gagnon",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     }
+    ],
+    "istNotes": null,
+    "commitment": {
+     "athlete": null,
+     "coach": null,
+     "date": null,
+     "nextReview": null
+    }
+   }
+  },
+  {
+   "sheet": "Meghan",
+   "hasContent": false,
+   "plan": {
+    "header": {
+     "athlete": null,
+     "position": null,
+     "trainingBlock": null,
+     "dateCompleted": null,
+     "nextReview": null
+    },
+    "offensive": [
+     {
+      "component": "Spin / Non Spin Starting Position / Set Up",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 1",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 2",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 3",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 4",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Steps",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Back Swing",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Release",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin / Non Spin Follow Through",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Accuracy",
+      "rating": null,
+      "priority": null
+     }
+    ],
+    "defensive": [
+     {
+      "component": "Ready position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Alignment",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "First movement / reaction",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Body Position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Extension / length",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Hand / arm position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Leg Position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Range",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Hold Position / Rollng forward / backwards",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Ball control",
+      "rating": null,
+      "priority": null
+     }
+    ],
+    "priorities": [
+     [],
+     [],
+     []
+    ],
+    "reflection": null,
+    "checkin": {
+     "actualHrs": null,
+     "targetHrs": null,
+     "hoursStatus": null,
+     "loadStatus": null,
+     "acwrValue": null,
+     "acwrStatus": null,
+     "participation": null,
+     "wellbeing": null
+    },
+    "dashboardReflection": null,
+    "nextAction": null,
+    "coachFeedback": null,
+    "ist": [
+     {
+      "discipline": "ATHLETIC THERAPY\nAlice Sobiesiak",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     },
+     {
+      "discipline": "STRENGTH & CONDITIONING\nJustin Staffiere",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     },
+     {
+      "discipline": "MENTAL PERFORMANCE\nChloe Gagnon",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     }
+    ],
+    "istNotes": null,
+    "commitment": {
+     "athlete": null,
+     "coach": null,
+     "date": null,
+     "nextReview": null
+    }
+   }
+  },
+  {
+   "sheet": "Emma",
+   "hasContent": false,
+   "plan": {
+    "header": {
+     "athlete": null,
+     "position": null,
+     "trainingBlock": null,
+     "dateCompleted": null,
+     "nextReview": null
+    },
+    "offensive": [
+     {
+      "component": "Spin / Non Spin Starting Position / Set Up",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 1",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 2",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 3",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 4",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Steps",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Back Swing",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Release",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin / Non Spin Follow Through",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Accuracy",
+      "rating": null,
+      "priority": null
+     }
+    ],
+    "defensive": [
+     {
+      "component": "Ready position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Alignment",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "First movement / reaction",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Body Position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Extension / length",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Hand / arm position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Leg Position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Range",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Hold Position / Rollng forward / backwards",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Ball control",
+      "rating": null,
+      "priority": null
+     }
+    ],
+    "priorities": [
+     [],
+     [],
+     []
+    ],
+    "reflection": null,
+    "checkin": {
+     "actualHrs": null,
+     "targetHrs": null,
+     "hoursStatus": null,
+     "loadStatus": null,
+     "acwrValue": null,
+     "acwrStatus": null,
+     "participation": null,
+     "wellbeing": null
+    },
+    "dashboardReflection": null,
+    "nextAction": null,
+    "coachFeedback": null,
+    "ist": [
+     {
+      "discipline": "ATHLETIC THERAPY\nAlice Sobiesiak",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     },
+     {
+      "discipline": "STRENGTH & CONDITIONING\nJustin Staffiere",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     },
+     {
+      "discipline": "MENTAL PERFORMANCE\nChloe Gagnon",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     }
+    ],
+    "istNotes": null,
+    "commitment": {
+     "athlete": null,
+     "coach": null,
+     "date": null,
+     "nextReview": null
+    }
+   }
+  },
+  {
+   "sheet": "Maryam",
+   "hasContent": false,
+   "plan": {
+    "header": {
+     "athlete": null,
+     "position": null,
+     "trainingBlock": null,
+     "dateCompleted": null,
+     "nextReview": null
+    },
+    "offensive": [
+     {
+      "component": "Spin / Non Spin Starting Position / Set Up",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 1",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 2",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 3",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 4",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Steps",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Back Swing",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Release",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin / Non Spin Follow Through",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Accuracy",
+      "rating": null,
+      "priority": null
+     }
+    ],
+    "defensive": [
+     {
+      "component": "Ready position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Alignment",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "First movement / reaction",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Body Position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Extension / length",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Hand / arm position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Leg Position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Range",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Hold Position / Rollng forward / backwards",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Ball control",
+      "rating": null,
+      "priority": null
+     }
+    ],
+    "priorities": [
+     [],
+     [],
+     []
+    ],
+    "reflection": null,
+    "checkin": {
+     "actualHrs": null,
+     "targetHrs": null,
+     "hoursStatus": null,
+     "loadStatus": null,
+     "acwrValue": null,
+     "acwrStatus": null,
+     "participation": null,
+     "wellbeing": null
+    },
+    "dashboardReflection": null,
+    "nextAction": null,
+    "coachFeedback": null,
+    "ist": [
+     {
+      "discipline": "ATHLETIC THERAPY\nAlice Sobiesiak",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     },
+     {
+      "discipline": "STRENGTH & CONDITIONING\nJustin Staffiere",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     },
+     {
+      "discipline": "MENTAL PERFORMANCE\nChloe Gagnon",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     }
+    ],
+    "istNotes": null,
+    "commitment": {
+     "athlete": null,
+     "coach": null,
+     "date": null,
+     "nextReview": null
+    }
+   }
+  },
+  {
+   "sheet": "Cassandra",
+   "hasContent": false,
+   "plan": {
+    "header": {
+     "athlete": null,
+     "position": null,
+     "trainingBlock": null,
+     "dateCompleted": null,
+     "nextReview": null
+    },
+    "offensive": [
+     {
+      "component": "Spin / Non Spin Starting Position / Set Up",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 1",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 2",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 3",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 4",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Steps",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Back Swing",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Release",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin / Non Spin Follow Through",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Accuracy",
+      "rating": null,
+      "priority": null
+     }
+    ],
+    "defensive": [
+     {
+      "component": "Ready position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Alignment",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "First movement / reaction",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Body Position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Extension / length",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Hand / arm position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Leg Position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Range",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Hold Position / Rollng forward / backwards",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Ball control",
+      "rating": null,
+      "priority": null
+     }
+    ],
+    "priorities": [
+     [],
+     [],
+     []
+    ],
+    "reflection": null,
+    "checkin": {
+     "actualHrs": null,
+     "targetHrs": null,
+     "hoursStatus": null,
+     "loadStatus": null,
+     "acwrValue": null,
+     "acwrStatus": null,
+     "participation": null,
+     "wellbeing": null
+    },
+    "dashboardReflection": null,
+    "nextAction": null,
+    "coachFeedback": null,
+    "ist": [
+     {
+      "discipline": "ATHLETIC THERAPY\nAlice Sobiesiak",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     },
+     {
+      "discipline": "STRENGTH & CONDITIONING\nJustin Staffiere",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     },
+     {
+      "discipline": "MENTAL PERFORMANCE\nChloe Gagnon",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     }
+    ],
+    "istNotes": null,
+    "commitment": {
+     "athlete": null,
+     "coach": null,
+     "date": null,
+     "nextReview": null
+    }
+   }
+  },
+  {
+   "sheet": "Florinda",
+   "hasContent": false,
+   "plan": {
+    "header": {
+     "athlete": null,
+     "position": null,
+     "trainingBlock": null,
+     "dateCompleted": null,
+     "nextReview": null
+    },
+    "offensive": [
+     {
+      "component": "Spin / Non Spin Starting Position / Set Up",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 1",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 2",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 3",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 4",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Steps",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Back Swing",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Release",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin / Non Spin Follow Through",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Accuracy",
+      "rating": null,
+      "priority": null
+     }
+    ],
+    "defensive": [
+     {
+      "component": "Ready position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Alignment",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "First movement / reaction",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Body Position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Extension / length",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Hand / arm position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Leg Position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Range",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Hold Position / Rollng forward / backwards",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Ball control",
+      "rating": null,
+      "priority": null
+     }
+    ],
+    "priorities": [
+     [],
+     [],
+     []
+    ],
+    "reflection": null,
+    "checkin": {
+     "actualHrs": null,
+     "targetHrs": null,
+     "hoursStatus": null,
+     "loadStatus": null,
+     "acwrValue": null,
+     "acwrStatus": null,
+     "participation": null,
+     "wellbeing": null
+    },
+    "dashboardReflection": null,
+    "nextAction": null,
+    "coachFeedback": null,
+    "ist": [
+     {
+      "discipline": "ATHLETIC THERAPY\nAlice Sobiesiak",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     },
+     {
+      "discipline": "STRENGTH & CONDITIONING\nJustin Staffiere",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     },
+     {
+      "discipline": "MENTAL PERFORMANCE\nChloe Gagnon",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     }
+    ],
+    "istNotes": null,
+    "commitment": {
+     "athlete": null,
+     "coach": null,
+     "date": null,
+     "nextReview": null
+    }
+   }
+  },
+  {
+   "sheet": "Whitney",
+   "hasContent": false,
+   "plan": {
+    "header": {
+     "athlete": null,
+     "position": null,
+     "trainingBlock": null,
+     "dateCompleted": null,
+     "nextReview": null
+    },
+    "offensive": [
+     {
+      "component": "Spin / Non Spin Starting Position / Set Up",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 1",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 2",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 3",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 4",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Steps",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Back Swing",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Release",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin / Non Spin Follow Through",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Accuracy",
+      "rating": null,
+      "priority": null
+     }
+    ],
+    "defensive": [
+     {
+      "component": "Ready position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Alignment",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "First movement / reaction",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Body Position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Extension / length",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Hand / arm position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Leg Position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Range",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Hold Position / Rollng forward / backwards",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Ball control",
+      "rating": null,
+      "priority": null
+     }
+    ],
+    "priorities": [
+     [],
+     [],
+     []
+    ],
+    "reflection": null,
+    "checkin": {
+     "actualHrs": null,
+     "targetHrs": null,
+     "hoursStatus": null,
+     "loadStatus": null,
+     "acwrValue": null,
+     "acwrStatus": null,
+     "participation": null,
+     "wellbeing": null
+    },
+    "dashboardReflection": null,
+    "nextAction": null,
+    "coachFeedback": null,
+    "ist": [
+     {
+      "discipline": "ATHLETIC THERAPY\nAlice Sobiesiak",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     },
+     {
+      "discipline": "STRENGTH & CONDITIONING\nJustin Staffiere",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     },
+     {
+      "discipline": "MENTAL PERFORMANCE\nChloe Gagnon",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     }
+    ],
+    "istNotes": null,
+    "commitment": {
+     "athlete": null,
+     "coach": null,
+     "date": null,
+     "nextReview": null
+    }
+   }
+  },
+  {
+   "sheet": "Sadie",
+   "hasContent": false,
+   "plan": {
+    "header": {
+     "athlete": null,
+     "position": null,
+     "trainingBlock": null,
+     "dateCompleted": null,
+     "nextReview": null
+    },
+    "offensive": [
+     {
+      "component": "Spin / Non Spin Starting Position / Set Up",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 1",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 2",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 3",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 4",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Steps",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Back Swing",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Release",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin / Non Spin Follow Through",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Accuracy",
+      "rating": null,
+      "priority": null
+     }
+    ],
+    "defensive": [
+     {
+      "component": "Ready position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Alignment",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "First movement / reaction",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Body Position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Extension / length",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Hand / arm position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Leg Position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Range",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Hold Position / Rollng forward / backwards",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Ball control",
+      "rating": null,
+      "priority": null
+     }
+    ],
+    "priorities": [
+     [],
+     [],
+     []
+    ],
+    "reflection": null,
+    "checkin": {
+     "actualHrs": null,
+     "targetHrs": null,
+     "hoursStatus": null,
+     "loadStatus": null,
+     "acwrValue": null,
+     "acwrStatus": null,
+     "participation": null,
+     "wellbeing": null
+    },
+    "dashboardReflection": null,
+    "nextAction": null,
+    "coachFeedback": null,
+    "ist": [
+     {
+      "discipline": "ATHLETIC THERAPY\nAlice Sobiesiak",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     },
+     {
+      "discipline": "STRENGTH & CONDITIONING\nJustin Staffiere",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     },
+     {
+      "discipline": "MENTAL PERFORMANCE\nChloe Gagnon",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     }
+    ],
+    "istNotes": null,
+    "commitment": {
+     "athlete": null,
+     "coach": null,
+     "date": null,
+     "nextReview": null
+    }
+   }
+  },
+  {
+   "sheet": "Shams",
+   "hasContent": false,
+   "plan": {
+    "header": {
+     "athlete": null,
+     "position": null,
+     "trainingBlock": null,
+     "dateCompleted": null,
+     "nextReview": null
+    },
+    "offensive": [
+     {
+      "component": "Spin / Non Spin Starting Position / Set Up",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 1",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 2",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 3",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 4",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Steps",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Back Swing",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Release",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin / Non Spin Follow Through",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Accuracy",
+      "rating": null,
+      "priority": null
+     }
+    ],
+    "defensive": [
+     {
+      "component": "Ready position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Alignment",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "First movement / reaction",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Body Position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Extension / length",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Hand / arm position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Leg Position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Range",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Hold Position / Rollng forward / backwards",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Ball control",
+      "rating": null,
+      "priority": null
+     }
+    ],
+    "priorities": [
+     [],
+     [],
+     []
+    ],
+    "reflection": null,
+    "checkin": {
+     "actualHrs": null,
+     "targetHrs": null,
+     "hoursStatus": null,
+     "loadStatus": null,
+     "acwrValue": null,
+     "acwrStatus": null,
+     "participation": null,
+     "wellbeing": null
+    },
+    "dashboardReflection": null,
+    "nextAction": null,
+    "coachFeedback": null,
+    "ist": [
+     {
+      "discipline": "ATHLETIC THERAPY\nAlice Sobiesiak",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     },
+     {
+      "discipline": "STRENGTH & CONDITIONING\nJustin Staffiere",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     },
+     {
+      "discipline": "MENTAL PERFORMANCE\nChloe Gagnon",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     }
+    ],
+    "istNotes": null,
+    "commitment": {
+     "athlete": null,
+     "coach": null,
+     "date": null,
+     "nextReview": null
+    }
+   }
+  },
+  {
+   "sheet": "Arianna",
+   "hasContent": false,
+   "plan": {
+    "header": {
+     "athlete": null,
+     "position": null,
+     "trainingBlock": null,
+     "dateCompleted": null,
+     "nextReview": null
+    },
+    "offensive": [
+     {
+      "component": "Spin / Non Spin Starting Position / Set Up",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 1",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 2",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 3",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 4",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Steps",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Back Swing",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Release",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin / Non Spin Follow Through",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Accuracy",
+      "rating": null,
+      "priority": null
+     }
+    ],
+    "defensive": [
+     {
+      "component": "Ready position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Alignment",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "First movement / reaction",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Body Position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Extension / length",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Hand / arm position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Leg Position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Range",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Hold Position / Rollng forward / backwards",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Ball control",
+      "rating": null,
+      "priority": null
+     }
+    ],
+    "priorities": [
+     [],
+     [],
+     []
+    ],
+    "reflection": null,
+    "checkin": {
+     "actualHrs": null,
+     "targetHrs": null,
+     "hoursStatus": null,
+     "loadStatus": null,
+     "acwrValue": null,
+     "acwrStatus": null,
+     "participation": null,
+     "wellbeing": null
+    },
+    "dashboardReflection": null,
+    "nextAction": null,
+    "coachFeedback": null,
+    "ist": [
+     {
+      "discipline": "ATHLETIC THERAPY\nAlice Sobiesiak",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     },
+     {
+      "discipline": "STRENGTH & CONDITIONING\nJustin Staffiere",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     },
+     {
+      "discipline": "MENTAL PERFORMANCE\nChloe Gagnon",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     }
+    ],
+    "istNotes": null,
+    "commitment": {
+     "athlete": null,
+     "coach": null,
+     "date": null,
+     "nextReview": null
+    }
+   }
+  },
+  {
+   "sheet": "Jade",
+   "hasContent": false,
+   "plan": {
+    "header": {
+     "athlete": null,
+     "position": null,
+     "trainingBlock": null,
+     "dateCompleted": null,
+     "nextReview": null
+    },
+    "offensive": [
+     {
+      "component": "Spin / Non Spin Starting Position / Set Up",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 1",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 2",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 3",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin Shot - Stage 4",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Steps",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Back Swing",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Non Spin - Release",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Spin / Non Spin Follow Through",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Accuracy",
+      "rating": null,
+      "priority": null
+     }
+    ],
+    "defensive": [
+     {
+      "component": "Ready position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Alignment",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "First movement / reaction",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Body Position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Extension / length",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Hand / arm position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Leg Position",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Range",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Hold Position / Rollng forward / backwards",
+      "rating": null,
+      "priority": null
+     },
+     {
+      "component": "Ball control",
+      "rating": null,
+      "priority": null
+     }
+    ],
+    "priorities": [
+     [],
+     [],
+     []
+    ],
+    "reflection": null,
+    "checkin": {
+     "actualHrs": null,
+     "targetHrs": null,
+     "hoursStatus": null,
+     "loadStatus": null,
+     "acwrValue": null,
+     "acwrStatus": null,
+     "participation": null,
+     "wellbeing": null
+    },
+    "dashboardReflection": null,
+    "nextAction": null,
+    "coachFeedback": null,
+    "ist": [
+     {
+      "discipline": "ATHLETIC THERAPY\nAlice Sobiesiak",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     },
+     {
+      "discipline": "STRENGTH & CONDITIONING\nJustin Staffiere",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     },
+     {
+      "discipline": "MENTAL PERFORMANCE\nChloe Gagnon",
+      "items": [
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       },
+       {
+        "focus": null,
+        "actions": null,
+        "measure": null,
+        "links": null,
+        "status": null
+       }
+      ]
+     }
+    ],
+    "istNotes": null,
+    "commitment": {
+     "athlete": null,
+     "coach": null,
+     "date": null,
+     "nextReview": null
+    }
+   }
+  }
+ ]
+}

@@ -236,6 +236,48 @@
                  padding: 7px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; white-space: nowrap; }
     #share-btn:hover { background: rgba(255,255,255,.15); }
     .modal-empty { color: var(--muted); font-size: 14px; text-align: center; padding: 24px 0; }
+
+    /* INDIVIDUAL PERFORMANCE PLAN */
+    .ipp-card { background: var(--card); border-radius: 8px; padding: 18px 20px; margin-bottom: 24px;
+                box-shadow: 0 1px 4px rgba(0,0,0,.4); border-top: 3px solid var(--red); }
+    .ipp-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+    .ipp-head h3 { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+    .ipp-meta { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+    .ipp-meta b { color: var(--text); font-weight: 500; }
+    .ipp-key { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    @media (max-width: 1000px) { .ipp-key { grid-template-columns: 1fr; } }
+    .ipp-box { background: #13161f; border-radius: 6px; padding: 12px 14px; }
+    .ipp-box h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 8px; font-weight: 600; }
+    .ipp-text { font-size: 13px; line-height: 1.55; white-space: pre-wrap; }
+    .ipp-prio { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .ipp-prio li { display: flex; gap: 10px; font-size: 13px; line-height: 1.45; }
+    .ipp-prio .n { flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; background: var(--red);
+                   color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+    .ipp-prio .sub { display: block; color: var(--muted); font-size: 12px; }
+    .ipp-checkin { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+    .ipp-checkin .v { font-size: 15px; font-weight: 600; }
+    .ipp-checkin .live { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .ipp-card details { border-top: 1px solid var(--border); }
+    .ipp-card summary { cursor: pointer; padding: 11px 0; font-size: 13px; font-weight: 600; list-style: none;
+                        display: flex; align-items: center; gap: 8px; }
+    .ipp-card summary::-webkit-details-marker { display: none; }
+    .ipp-card summary::before { content: '\25B8'; color: var(--muted); transition: transform .15s; }
+    .ipp-card details[open] summary::before { transform: rotate(90deg); }
+    .ipp-card summary .hint { font-weight: 400; color: var(--muted); font-size: 12px; }
+    .ipp-section { padding: 0 0 14px; }
+    .ipp-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 900px) { .ipp-grid-2 { grid-template-columns: 1fr; } }
+    .ipp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .ipp-table th { cursor: default; padding: 7px 10px; }
+    .ipp-table th:hover { background: #13161f; }
+    .ipp-table td { padding: 7px 10px; vertical-align: top; }
+    .ipp-table tr:hover td { background: transparent; }
+    .ipp-table tr.prio td:first-child { font-weight: 600; }
+    .ipp-pips { display: inline-flex; gap: 3px; vertical-align: middle; }
+    .ipp-pips i { width: 10px; height: 10px; border-radius: 2px; background: var(--border); }
+    .ipp-pips i.on { background: var(--red); }
+    .ipp-ist-name { white-space: pre-line; font-weight: 600; font-size: 12px; }
+    .ipp-empty { color: var(--muted); font-size: 13px; font-style: italic; }
   </style>
 </head>
 <body>
@@ -325,6 +367,8 @@
     </div>
 
     <div class="stats-row" id="ind-stats"></div>
+
+    <div id="ind-ipp"></div>
 
     <div class="chart-toggle-bar">
       <span>View:</span>
@@ -492,21 +536,34 @@ const WB_KEYS = ['stress','enjoyment','sleep','eating','timeManagement','mood','
 const WB_LABELS = ['Stress','Enjoyment','Sleep','Eating','Time Mgmt','Mood','Motivation','Confidence','Mental Health','Mental Perf'];
 const WB_COLORS = ['#e74c3c','#2ecc71','#3498db','#9b59b6','#e67e22','#f1c40f','#1abc9c','#e91e63','#795548','#607d8b'];
 
+// Date keys are local calendar dates ('YYYY-MM-DD'). Never round-trip through toISOString():
+// that converts to UTC and shifts the date by a day depending on the viewer's timezone.
+function toDateKey(d) {
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+// Parse a 'YYYY-MM-DD' key as a local date (new Date('YYYY-MM-DD') would treat it as UTC midnight)
+function parseDateKey(input) {
+  if (input instanceof Date) return new Date(input);
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(input || '');
+  return m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(input);
+}
+
 function getMondayOfWeek(dateInput) {
   // Weeks run Monday to Sunday
-  const d = new Date(dateInput);
+  const d = parseDateKey(dateInput);
   if (isNaN(d)) return null;
   const day = d.getDay();
   const diff = day === 0 ? -6 : 1 - day; // Sunday rolls back 6, others roll back to Monday
   d.setDate(d.getDate() + diff);
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString().split('T')[0];
+  return toDateKey(d);
 }
 
 function addWeeks(weekKey, n) {
-  const d = new Date(weekKey);
+  const d = parseDateKey(weekKey);
   d.setDate(d.getDate() + n * 7);
-  return d.toISOString().split('T')[0];
+  return toDateKey(d);
 }
 
 function getWeekKeyFromQ(month, dayStr) {
@@ -518,7 +575,7 @@ function getWeekKeyFromQ(month, dayStr) {
   let year = now.getFullYear();
   if (m > now.getMonth() + 2) year--;
   // Questionnaire reports the Monday — that is the week start
-  return new Date(year, m, day).toISOString().split('T')[0];
+  return toDateKey(new Date(year, m, day));
 }
 
 function normalizeFromFile(f) {
@@ -751,6 +808,19 @@ function fetchCSV(url, label) {
   });
 }
 
+// The IPP file is optional: if it can't load, the dashboard still works (no roster filter, no plans)
+async function fetchIPP() {
+  if (!CONFIG.IPP_JSON_URL) return null;
+  try {
+    const resp = await fetch(CONFIG.IPP_JSON_URL, { cache: 'no-cache' });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    return await resp.json();
+  } catch (e) {
+    console.warn('Could not load IPP data — showing all athletes without plans:', e);
+    return null;
+  }
+}
+
 // ============================================================
 //  HR DATA PROCESSING
 // ============================================================
@@ -938,16 +1008,37 @@ let ATHLETES = {};   // keyed by normalised name
 let HR_DATA = {};
 let Q_DATA  = {};
 
-const EXCLUDED_ATHLETES = ['whitney bogart'];
+let IPP_DATA = null; // parsed ipp_data.json, or null if it failed to load
+
+// The IPP workbook's sheets define the roster. Match each sheet to an athlete in the
+// HR/questionnaire data by full name (if filled in on the plan) or by first name.
+// Returns Map(athleteKey → plan entry), or null when no roster is available.
+function resolveRoster(dataNames) {
+  if (!IPP_DATA?.athletes?.length) return null;
+  const roster = new Map();
+  for (const entry of IPP_DATA.athletes) {
+    const fullName = entry.plan?.header?.athlete ? resolveAlias(normalizeName(entry.plan.header.athlete)) : null;
+    const first    = normalizeName(entry.sheet).split(' ')[0];
+    const matches  = fullName && dataNames.includes(fullName)
+      ? [fullName]
+      : dataNames.filter(n => n.split(' ')[0] === first);
+    if (matches.length > 1) console.warn(`IPP sheet "${entry.sheet}" matches several athletes:`, matches);
+    // New athletes with no data yet still get a profile, keyed by their plan name or sheet name
+    roster.set(matches[0] || fullName || normalizeName(entry.sheet), entry);
+  }
+  return roster;
+}
 
 function buildProfiles() {
-  const allNames = new Set([...Object.keys(HR_DATA), ...Object.keys(Q_DATA)]);
+  const dataNames = [...new Set([...Object.keys(HR_DATA), ...Object.keys(Q_DATA)])];
+  const roster = resolveRoster(dataNames);
+  // Without a roster (IPP file failed to load) fall back to everyone in the data
+  const allNames = roster ? [...roster.keys()] : dataNames;
   const currentWk = getMondayOfWeek(new Date());
   const prevWk    = addWeeks(currentWk, -1);
 
   const profiles = {};
   for (const an of allNames) {
-    if (EXCLUDED_ATHLETES.includes(an)) continue;
     const hrWks = HR_DATA[an] || {};
     const qWks  = Q_DATA[an]  || {};
 
@@ -968,27 +1059,32 @@ function buildProfiles() {
     const latestQWk = Object.keys(qWks).sort().pop() || null;
     const latestHRWk = Object.keys(hrWks).sort().pop() || null;
 
-    const latestCompletedHRWk = Object.keys(hrWks).filter(wk => wk < currentWk).sort().pop() || null;
-    const curACWR = weeks[prevWk]?.acwr ?? (latestCompletedHRWk ? weeks[latestCompletedHRWk]?.acwr : null) ?? null;
-    const curMEPs = hrWks[currentWk]?.meps ?? hrWks[latestHRWk]?.meps ?? 0;
-    // Use current week Q data if available, fall back to previous week (athletes often submit end-of-week)
-    const curQWk = qWks[currentWk] ? currentWk : (qWks[prevWk] ? prevWk : null);
-    const curMissedLoad = calcMissedLoad(curQWk ? (qWks[curQWk]?.missed || []) : []);
-    const curMinutes = (hrWks[currentWk]?.minutes ?? hrWks[latestHRWk]?.minutes ?? 0) + (curMissedLoad?.minutes || 0);
-    const curSessions = (hrWks[currentWk]?.count ?? hrWks[latestHRWk]?.count ?? 0) + (curQWk ? (qWks[curQWk]?.missed?.length || 0) : 0);
+    // ACWR always reflects the last full Mon–Sun week, even if the athlete didn't train in it
+    const curACWR = calcACWR(mergedMepsByWk, prevWk);
+    const curMEPs = hrWks[currentWk]?.meps ?? 0;
+    // Totals for a single week only — no fallback to older weeks, so inactive athletes show nothing
+    const weekTotals = wk => ({
+      minutes:  (hrWks[wk]?.minutes || 0) + (calcMissedLoad(qWks[wk]?.missed || [])?.minutes || 0),
+      sessions: (hrWks[wk]?.count   || 0) + (qWks[wk]?.missed?.length || 0),
+    });
+    const { minutes: curMinutes,  sessions: curSessions  } = weekTotals(currentWk);
+    const { minutes: prevMinutes, sessions: prevSessions } = weekTotals(prevWk);
     const latestQ = latestQWk ? qWks[latestQWk] : null;
     const hasQData = Object.keys(qWks).length > 0;
+    // A report is "current" if submitted for this week or last (athletes often submit end-of-week)
     const hasCurrentReport = !!(qWks[currentWk] || qWks[prevWk]);
 
     profiles[an] = {
       an, displayName: capitalize(an),
       weeks, weekList: allWks,
       currentWk, latestQWk, latestHRWk,
-      curACWR, curMEPs, curMinutes, curSessions,
+      curACWR, curMEPs, curMinutes, curSessions, prevMinutes, prevSessions, mergedMepsByWk,
       latestWB: latestQ?.wellbeing || null,
       latestPart: latestQ?.participation || '',
-      hasFlag: latestQ?.hasFlag || false,
+      // Only count an injury flag if it comes from a current report
+      hasFlag: hasCurrentReport && (latestQ?.hasFlag || false),
       hasQData, hasCurrentReport,
+      ipp: roster?.get(an) || null,
     };
   }
   return profiles;
@@ -1026,7 +1122,7 @@ function weekRangeKeys(startDate, endDate) {
 
 // Aggregate an athlete's stats over a set of their own week keys (used when a date filter is active).
 function computeRangeStats(a, weekKeys) {
-  let minutes = 0, sessions = 0, latestQWk = null, lastDataWk = null;
+  let minutes = 0, sessions = 0, latestQWk = null;
   for (const wk of weekKeys) {
     const w = a.weeks[wk];
     if (!w) continue;
@@ -1036,10 +1132,14 @@ function computeRangeStats(a, weekKeys) {
       minutes  += merged.minutes || 0;
       sessions += (w.hr?.count || 0) + (w.q?.missed?.length || 0);
     }
-    if (w.hr || w.q) lastDataWk = wk;
     if (w.q) latestQWk = wk;
   }
-  const acwr = lastDataWk ? (a.weeks[lastDataWk]?.acwr ?? null) : null;
+  // ACWR for the last full week within the range (the current week is never full)
+  const prevWk = addWeeks(getMondayOfWeek(new Date()), -1);
+  const endWk  = FILTER_END ? getMondayOfWeek(FILTER_END) : prevWk;
+  const acwrWk = endWk < prevWk ? endWk : prevWk;
+  const startWk = FILTER_START ? getMondayOfWeek(FILTER_START) : null;
+  const acwr = (!startWk || acwrWk >= startWk) ? calcACWR(a.mergedMepsByWk, acwrWk) : null;
   const latestQ = latestQWk ? a.weeks[latestQWk].q : null;
   return {
     acwr, minutes, sessions, latestQWk,
@@ -1207,6 +1307,8 @@ function renderTeam() {
   const tbody = document.getElementById('team-tbody');
   tbody.innerHTML = sorted.map(a => {
     const s = statsMap.get(a.an);
+    // Latest questionnaire exists but isn't recent — show its answers dimmed with their date
+    const stale = !!s.latestQWk && !s.hasCurrentReport;
     const wbPips = WB_KEYS.map((k, idx) => {
       const v = s.latestWB?.[k];
       if (v == null) return `<div class="wb-pip" style="background:#2a2d3a" title="${WB_LABELS[idx]}: N/A"></div>`;
@@ -1233,8 +1335,10 @@ function renderTeam() {
       <td>${acwrBadge(s.acwr)}</td>
       <td>${hrs}</td>
       <td>${s.sessions > 0 ? s.sessions : '<span class="no-data">—</span>'}</td>
-      <td><div class="wb-row">${wbPips}</div></td>
-      <td><span class="${partClass}">${partShort}</span></td>
+      <td><div class="wb-row" style="${stale ? 'opacity:.35' : ''}" ${stale ? `title="From report for week of ${fmtDate(s.latestQWk)}"` : ''}>${wbPips}</div></td>
+      <td>${stale
+        ? `<span class="no-data" title="${s.latestPart}">${partShort} · ${fmtDate(s.latestQWk)}</span>`
+        : `<span class="${partClass}">${partShort}</span>`}</td>
       <td>${reportBadge}</td>
     </tr>`;
   }).join('');
@@ -1258,11 +1362,11 @@ function openAthlete(an) {
 
 let charts = {};
 let chartMode = 'all';
-let hoursMode = 'week';
+let hoursMode = 'prev';
 let loadMetric = 'meps'; // 'meps' | 'hours'
 let _weekLabels = [];
 let _hrWeekData = [];
-let _indHours = { curMinutes: 0, curSessions: 0, avgMinutes: 0, weeksWithData: 0 };
+let _indHours = {}; // mode → { minutes, sessions?, weeks? } for the Training Time card
 
 function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
 
@@ -1328,18 +1432,17 @@ function setChartMode(mode, btn) {
 
 function setHoursMode(mode) {
   hoursMode = mode;
-  document.getElementById('hours-btn-week')?.classList.toggle('active', mode === 'week');
-  document.getElementById('hours-btn-avg')?.classList.toggle('active', mode === 'avg');
+  for (const m of Object.keys(_indHours)) {
+    document.getElementById(`hours-btn-${m}`)?.classList.toggle('active', m === mode);
+  }
   const valEl = document.getElementById('ind-hours-value');
   const subEl = document.getElementById('ind-hours-sub');
-  if (!valEl) return;
-  if (mode === 'week') {
-    valEl.textContent = _indHours.curMinutes > 0 ? (_indHours.curMinutes / 60).toFixed(1) + ' hrs' : '—';
-    subEl.textContent = _indHours.curSessions + ' session' + (_indHours.curSessions !== 1 ? 's' : '');
-  } else {
-    valEl.textContent = _indHours.avgMinutes > 0 ? (_indHours.avgMinutes / 60).toFixed(1) + ' hrs' : '—';
-    subEl.textContent = 'avg over ' + _indHours.weeksWithData + ' wk' + (_indHours.weeksWithData !== 1 ? 's' : '');
-  }
+  const h = _indHours[mode];
+  if (!valEl || !h) return;
+  valEl.textContent = h.minutes > 0 ? (h.minutes / 60).toFixed(1) + ' hrs' : '—';
+  subEl.textContent = mode === 'avg'
+    ? 'avg over ' + h.weeks + ' wk' + (h.weeks !== 1 ? 's' : '')
+    : h.sessions + ' session' + (h.sessions !== 1 ? 's' : '');
 }
 
 function makeLoadChart(labels, weekData, mode = 'week') {
@@ -1649,6 +1752,145 @@ function toggleWBMetric(btn, idx) {
 }
 
 // ============================================================
+//  INDIVIDUAL PERFORMANCE PLAN
+// ============================================================
+
+function esc(v) {
+  return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Badge colour for each dropdown value used in the IPP workbook
+const IPP_STATUS_BADGE = {
+  'target met': 'green', 'on target': 'green', 'optimal': 'green', 'full': 'green',
+  'improving': 'green', 'on track': 'green', 'achieved': 'green',
+  'below target': 'yellow', 'below': 'yellow', 'monitor': 'yellow', 'reduced': 'yellow', 'declining': 'yellow',
+  'above target': 'blue', 'stable': 'blue', 'in progress': 'blue',
+  'above': 'orange',
+  'action required': 'red', 'concern': 'red',
+  'not started': 'grey',
+};
+
+function ippBadge(v) {
+  if (v == null || v === '') return '<span class="no-data">—</span>';
+  return `<span class="badge badge-${IPP_STATUS_BADGE[String(v).toLowerCase()] || 'grey'}">${esc(v)}</span>`;
+}
+
+function ippText(v) {
+  return v ? `<div class="ipp-text">${esc(v)}</div>` : '<div class="ipp-empty">Not filled in yet</div>';
+}
+
+function ippPips(rating) {
+  const n = parseInt(rating);
+  if (!n) return '<span class="no-data">—</span>';
+  return `<span class="ipp-pips" title="${n} / 5">${[1,2,3,4,5].map(i => `<i class="${i <= n ? 'on' : ''}"></i>`).join('')}</span> ${n}`;
+}
+
+function renderIPP(a) {
+  const el = document.getElementById('ind-ipp');
+  if (!a.ipp) { el.innerHTML = ''; return; }
+  const p = a.ipp.plan;
+
+  if (!a.ipp.hasContent) {
+    el.innerHTML = `<div class="ipp-card">
+      <div class="ipp-head"><h3>Individual Performance Plan</h3></div>
+      <div class="ipp-empty">This plan hasn't been filled in yet. It will appear here once the IPP sheet is completed and synced.</div>
+    </div>`;
+    return;
+  }
+
+  const hd = p.header || {};
+  const overdue = hd.nextReview && hd.nextReview < toDateKey(new Date());
+  const meta = [
+    hd.position      && `<span>Position <b>${esc(hd.position)}</b></span>`,
+    hd.trainingBlock && `<span>Block <b>${esc(hd.trainingBlock)}</b></span>`,
+    hd.dateCompleted && `<span>Completed <b>${fmtDate(hd.dateCompleted)}</b></span>`,
+    hd.nextReview    && `<span>Next review <b>${fmtDate(hd.nextReview)}</b>${overdue ? ' <span class="badge badge-red">Overdue</span>' : ''}</span>`,
+  ].filter(Boolean).join('');
+
+  const prios = (p.priorities || []).map((parts, i) => parts.length
+    ? `<li><span class="n">${i + 1}</span><span>${esc(parts[0])}${parts.slice(1).map(x => `<span class="sub">${esc(x)}</span>`).join('')}</span></li>`
+    : '').join('');
+
+  // Check-in: values recorded at the IPP meeting, with the dashboard's live figures alongside
+  const ci = p.checkin || {};
+  const liveHrs  = a.prevMinutes > 0 ? (a.prevMinutes / 60).toFixed(1) + ' h' : '—';
+  const liveAcwr = a.curACWR != null ? a.curACWR.toFixed(2) : '—';
+  const ciBox = (label, value, live) =>
+    `<div class="ipp-box"><h4>${label}</h4><div class="v">${value}</div>${live ? `<div class="live">${live}</div>` : ''}</div>`;
+  const checkin = `<div class="ipp-checkin">
+    ${ciBox('Training hours', `${esc(ci.actualHrs ?? '—')} / ${esc(ci.targetHrs ?? '—')} h ${ci.hoursStatus ? ippBadge(ci.hoursStatus) : ''}`, `Dashboard last week: ${liveHrs}`)}
+    ${ciBox('Weekly load', ippBadge(ci.loadStatus))}
+    ${ciBox('ACWR', `${esc(ci.acwrValue ?? '—')} ${ci.acwrStatus ? ippBadge(ci.acwrStatus) : ''}`, `Dashboard last week: ${liveAcwr}`)}
+    ${ciBox('Participation', ippBadge(ci.participation))}
+    ${ciBox('Wellbeing trend', ippBadge(ci.wellbeing))}
+  </div>`;
+
+  const assessTable = (title, rows) => `<table class="ipp-table">
+      <thead><tr><th>${title}</th><th>Rating</th><th>Priority</th></tr></thead>
+      <tbody>${rows.map(r => `<tr class="${r.priority === 'Yes' ? 'prio' : ''}">
+        <td>${esc(r.component)}</td><td style="white-space:nowrap">${ippPips(r.rating)}</td>
+        <td>${r.priority === 'Yes' ? '<span class="badge badge-red">Priority</span>' : esc(r.priority)}</td></tr>`).join('')}
+      </tbody>
+    </table>`;
+
+  const istRows = (p.ist || []).flatMap(block => {
+    const items = block.items.filter(it => Object.values(it).some(v => v != null));
+    if (!items.length) {
+      return [`<tr><td class="ipp-ist-name">${esc(block.discipline)}</td><td colspan="5" class="ipp-empty">Not filled in yet</td></tr>`];
+    }
+    return items.map((it, i) => `<tr>
+      ${i === 0 ? `<td class="ipp-ist-name" rowspan="${items.length}">${esc(block.discipline)}</td>` : ''}
+      <td>${esc(it.focus)}</td><td>${esc(it.actions)}</td><td>${esc(it.measure)}</td>
+      <td>${esc(it.links)}</td><td>${ippBadge(it.status)}</td></tr>`);
+  }).join('');
+
+  const cm = p.commitment || {};
+  const commitment = [cm.athlete && `Athlete: ${esc(cm.athlete)}`, cm.coach && `Coach: ${esc(cm.coach)}`,
+                      cm.date && `Signed ${fmtDate(cm.date)}`, cm.nextReview && `Next review ${fmtDate(cm.nextReview)}`]
+                     .filter(Boolean).join(' · ');
+
+  el.innerHTML = `<div class="ipp-card">
+    <div class="ipp-head"><h3>Individual Performance Plan</h3><div class="ipp-meta">${meta}</div></div>
+
+    <div class="ipp-key">
+      <div class="ipp-box"><h4>My DTE Priorities</h4>${prios ? `<ol class="ipp-prio">${prios}</ol>` : ippText(null)}</div>
+      <div class="ipp-box"><h4>Next Accountability Action</h4>${ippText(p.nextAction)}</div>
+      <div class="ipp-box"><h4>Coach Feedback</h4>${ippText(p.coachFeedback)}</div>
+    </div>
+
+    <details open>
+      <summary>Training Accountability Check-in <span class="hint">— recorded at IPP meeting</span></summary>
+      <div class="ipp-section">${checkin}</div>
+    </details>
+    <details>
+      <summary>Technical Self-Assessment</summary>
+      <div class="ipp-section ipp-grid-2">
+        ${assessTable('Offensive', p.offensive || [])}
+        ${assessTable('Defensive', p.defensive || [])}
+      </div>
+    </details>
+    <details>
+      <summary>Reflections</summary>
+      <div class="ipp-section ipp-grid-2">
+        <div class="ipp-box"><h4>What improved? What needs improvement?</h4>${ippText(p.reflection)}</div>
+        <div class="ipp-box"><h4>Does my training behaviour support my DTE priorities?</h4>${ippText(p.dashboardReflection)}</div>
+      </div>
+    </details>
+    <details>
+      <summary>Integrated Support Team</summary>
+      <div class="ipp-section">
+        <div style="overflow-x:auto"><table class="ipp-table">
+          <thead><tr><th>Discipline</th><th>Focus Area</th><th>Key Actions</th><th>Measure / Evidence</th><th>DTE #</th><th>Status</th></tr></thead>
+          <tbody>${istRows}</tbody>
+        </table></div>
+        <div class="ipp-box" style="margin-top:12px"><h4>IST Integration Notes</h4>${ippText(p.istNotes)}</div>
+      </div>
+    </details>
+    ${commitment ? `<div style="border-top:1px solid var(--border);padding-top:10px;font-size:12px;color:var(--muted)">Commitment — ${commitment}</div>` : ''}
+  </div>`;
+}
+
+// ============================================================
 //  INDIVIDUAL VIEW RENDERER
 // ============================================================
 
@@ -1686,26 +1928,33 @@ function renderIndividual(an) {
   // Stats row
   const latestQ = s.latestQ;
   const partCls = participationClass(s.latestPart);
+  const partStale = !!s.latestQWk && !s.hasCurrentReport;
 
   // Compute avg hours from the trend window, excluding the current (incomplete) week
   const weeksWithData = hrWeekData.slice(0, -1).filter(w => w && w.minutes > 0);
   const avgMinutes = weeksWithData.length
     ? weeksWithData.reduce((s, w) => s + w.minutes, 0) / weeksWithData.length : 0;
-  hoursMode = 'week';
-  const mergedCurMinutes = hrWeekData[hrWeekData.length - 1]?.minutes ?? 0;
-  _indHours = { curMinutes: mergedCurMinutes, curSessions: s.sessions, avgMinutes, weeksWithData: weeksWithData.length };
+  const avg = { label: 'Avg/Wk', minutes: avgMinutes, weeks: weeksWithData.length };
+  // With a date filter the card shows the range total; otherwise last full week / this week so far
+  _indHours = isFilterActive()
+    ? { range: { label: 'Range',   minutes: s.minutes,       sessions: s.sessions }, avg }
+    : { prev:  { label: 'Last Wk', minutes: a.prevMinutes,   sessions: a.prevSessions },
+        current: { label: 'This Wk', minutes: a.curMinutes,  sessions: a.curSessions }, avg };
+  hoursMode = isFilterActive() ? 'range' : 'prev';
+  const hoursBtns = Object.entries(_indHours).map(([m, h]) =>
+    `<button id="hours-btn-${m}" class="chart-toggle-btn" onclick="setHoursMode('${m}')" style="padding:2px 8px;font-size:10px;border-radius:12px">${h.label}</button>`
+  ).join('');
 
   document.getElementById('ind-stats').innerHTML = `
     <div class="stat-card">
       <div class="label" style="display:flex;align-items:center;justify-content:space-between;gap:6px">
         <span>Training Time</span>
         <span style="display:flex;gap:3px;flex-shrink:0">
-          <button id="hours-btn-week" class="chart-toggle-btn active" onclick="setHoursMode('week')" style="padding:2px 8px;font-size:10px;border-radius:12px">This Wk</button>
-          <button id="hours-btn-avg"  class="chart-toggle-btn"        onclick="setHoursMode('avg')"  style="padding:2px 8px;font-size:10px;border-radius:12px">Avg/Wk</button>
+          ${hoursBtns}
         </span>
       </div>
-      <div class="value" id="ind-hours-value">${s.minutes > 0 ? (s.minutes / 60).toFixed(1) + ' hrs' : '—'}</div>
-      <div class="sub"   id="ind-hours-sub">${s.sessions} session${s.sessions !== 1?'s':''}</div>
+      <div class="value" id="ind-hours-value"></div>
+      <div class="sub"   id="ind-hours-sub"></div>
     </div>
     <div class="stat-card">
       <div class="label">ACWR</div>
@@ -1719,10 +1968,12 @@ function renderIndividual(an) {
     </div>
     <div class="stat-card">
       <div class="label">Participation</div>
-      <div class="value ${partCls}" style="font-size:15px;line-height:1.3">${participationShort(s.latestPart) || '—'}</div>
-      <div class="sub">${s.hasFlag ? 'Injury/illness flag' : ''}&nbsp;</div>
+      <div class="value ${partStale ? 'no-data' : partCls}" style="font-size:15px;line-height:1.3">${participationShort(s.latestPart) || '—'}</div>
+      <div class="sub">${partStale ? `Outdated — from week of ${fmtDate(s.latestQWk)}` : s.hasFlag ? 'Injury/illness flag' : ''}&nbsp;</div>
     </div>
   `;
+  setHoursMode(hoursMode);
+  renderIPP(a);
 
   // Show share button (coach view only, not in demo mode)
   if (!ATHLETE_PARAM && !DEMO_MODE) document.getElementById('share-btn').style.display = '';
@@ -1833,10 +2084,12 @@ async function loadData() {
       throw new Error('QUESTIONNAIRE_URL is not set in config.js');
     }
 
-    const [hrRows, qRows] = await Promise.all([
+    const [hrRows, qRows, ipp] = await Promise.all([
       fetchCSV(CONFIG.HR_CSV_URL, 'HR CSV (Google Sheets)'),
       fetchCSV(CONFIG.QUESTIONNAIRE_URL, 'Questionnaire (Google Sheets)'),
+      fetchIPP(),
     ]);
+    IPP_DATA = ipp;
 
     document.getElementById('loading-msg').textContent = 'Processing…';
 
