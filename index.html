@@ -290,14 +290,21 @@
     <div id="error-banner"></div>
     <div class="cards" id="summary-cards"></div>
     <div class="table-wrap">
-      <h2>Athlete Status</h2>
+      <h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span>Athlete Status</span>
+        <span id="team-week-toggle" style="display:flex;gap:6px;margin-left:auto;align-items:center">
+          <span id="team-week-range" style="font-weight:400;font-size:11px;color:var(--muted)"></span>
+          <button class="chart-toggle-btn active" id="team-week-prev" onclick="setTeamWeek('prev')" style="padding:3px 10px;font-size:11px">Last Week</button>
+          <button class="chart-toggle-btn" id="team-week-current" onclick="setTeamWeek('current')" style="padding:3px 10px;font-size:11px">This Week</button>
+        </span>
+      </h2>
       <table id="team-table">
         <thead>
           <tr>
             <th onclick="sortTable('name')">Athlete</th>
             <th onclick="sortTable('acwr')">ACWR</th>
-            <th onclick="sortTable('hours')" id="th-hours">Time Trained (7d)</th>
-            <th onclick="sortTable('sessions')" id="th-sessions">Sessions (7d)</th>
+            <th onclick="sortTable('hours')" id="th-hours">Time Trained (Last Week)</th>
+            <th onclick="sortTable('sessions')" id="th-sessions">Sessions (Last Week)</th>
             <th onclick="sortTable('wellbeing')">Wellbeing</th>
             <th onclick="sortTable('participation')">Participation</th>
             <th onclick="sortTable('submitted')">Last Report</th>
@@ -1080,11 +1087,43 @@ function updateFilterStatus() {
   el.textContent = `Filtering: ${s} – ${e}`;
 }
 
+// Team table week toggle: 'prev' = last full Mon–Sun week, 'current' = this week so far
+let TEAM_WEEK = 'prev';
+
+function teamWeekKey() {
+  const currentWk = getMondayOfWeek(new Date());
+  return TEAM_WEEK === 'prev' ? addWeeks(currentWk, -1) : currentWk;
+}
+
+function setTeamWeek(mode) {
+  TEAM_WEEK = mode;
+  updateTeamTableHeaders();
+  renderTeam();
+}
+
 function updateTeamTableHeaders() {
+  const active  = isFilterActive();
+  const label   = TEAM_WEEK === 'prev' ? 'Last Week' : 'This Week';
   const hoursTh = document.getElementById('th-hours');
   const sessTh  = document.getElementById('th-sessions');
-  if (hoursTh) hoursTh.textContent = isFilterActive() ? 'Time Trained (range)' : 'Time Trained (7d)';
-  if (sessTh)  sessTh.textContent  = isFilterActive() ? 'Sessions (range)'    : 'Sessions (7d)';
+  if (hoursTh) hoursTh.textContent = active ? 'Time Trained (range)' : `Time Trained (${label})`;
+  if (sessTh)  sessTh.textContent  = active ? 'Sessions (range)'    : `Sessions (${label})`;
+
+  // The week toggle is superseded by an active date filter — grey it out
+  for (const mode of ['prev', 'current']) {
+    const b = document.getElementById(`team-week-${mode}`);
+    if (!b) continue;
+    b.classList.toggle('active', mode === TEAM_WEEK);
+    b.disabled      = active;
+    b.style.opacity = active ? '0.4' : '';
+    b.style.cursor  = active ? 'not-allowed' : '';
+  }
+  const rangeEl = document.getElementById('team-week-range');
+  if (rangeEl) {
+    const [y, m, d] = teamWeekKey().split('-').map(Number);
+    const sunday = new Date(y, m - 1, d + 6).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' });
+    rangeEl.textContent = active ? '' : `${fmtDate(teamWeekKey())} – ${sunday}`;
+  }
 }
 
 // The Compare tab's 4/8/12-week toggle is superseded by an active date filter — grey it out
@@ -1127,7 +1166,14 @@ let sortDir = 1;
 
 function renderTeam() {
   const list = Object.values(ATHLETES);
-  const statsMap = new Map(list.map(a => [a.an, getDisplayStats(a)]));
+  // Without a date filter, hours/sessions reflect only the toggled week (no fallback to older weeks)
+  const teamWk = teamWeekKey();
+  const statsMap = new Map(list.map(a => {
+    const s = getDisplayStats(a);
+    if (isFilterActive()) return [a.an, s];
+    const wkStats = computeRangeStats(a, [teamWk]);
+    return [a.an, { ...s, minutes: wkStats.minutes, sessions: wkStats.sessions }];
+  }));
 
   // Summary cards
   const flagged  = list.filter(a => statsMap.get(a.an).hasFlag).length;
