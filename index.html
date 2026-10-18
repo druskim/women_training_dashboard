@@ -1104,6 +1104,15 @@ function filteredWeekList(weekList) {
   return weekList.filter(wk => (!startWk || wk >= startWk) && (!endWk || wk <= endWk));
 }
 
+// Week keys for averaging over the active filter range. The current week is left out while
+// it's in progress (it would drag the average down) unless it's the only week in the range.
+function fullWeeksInRange() {
+  const currentWk = getMondayOfWeek(new Date());
+  const all = weekRangeKeys(FILTER_START || EARLIEST_WEEK || currentWk, FILTER_END || toDateKey(new Date()));
+  const full = all.filter(wk => wk < currentWk);
+  return full.length ? full : all;
+}
+
 // Continuous list of Monday week-keys between two dates (inclusive) — used to build chart x-axes.
 function weekRangeKeys(startDate, endDate) {
   const startWk = getMondayOfWeek(startDate);
@@ -1206,7 +1215,7 @@ function updateTeamTableHeaders() {
   const label   = TEAM_WEEK === 'prev' ? 'Last Week' : 'This Week';
   const hoursTh = document.getElementById('th-hours');
   const sessTh  = document.getElementById('th-sessions');
-  if (hoursTh) hoursTh.textContent = active ? 'Time Trained (range)' : `Time Trained (${label})`;
+  if (hoursTh) hoursTh.textContent = active ? 'Avg Hours / Week' : `Time Trained (${label})`;
   if (sessTh)  sessTh.textContent  = active ? 'Sessions (range)'    : `Sessions (${label})`;
 
   // The week toggle is superseded by an active date filter — grey it out
@@ -1268,9 +1277,15 @@ function renderTeam() {
   const list = Object.values(ATHLETES);
   // Without a date filter, hours/sessions reflect only the toggled week (no fallback to older weeks)
   const teamWk = teamWeekKey();
+  const avgWeeks = isFilterActive() ? fullWeeksInRange() : [];
   const statsMap = new Map(list.map(a => {
     const s = getDisplayStats(a);
-    if (isFilterActive()) return [a.an, s];
+    if (isFilterActive()) {
+      // Hours column shows average per week across every full week in the range (zero weeks included)
+      // (sessions are counted over the same weeks so the two columns agree)
+      const { minutes: rangeMinutes, sessions } = computeRangeStats(a, avgWeeks);
+      return [a.an, { ...s, rangeMinutes, sessions, minutes: avgWeeks.length ? rangeMinutes / avgWeeks.length : 0 }];
+    }
     const wkStats = computeRangeStats(a, [teamWk]);
     return [a.an, { ...s, minutes: wkStats.minutes, sessions: wkStats.sessions }];
   }));
@@ -1325,7 +1340,10 @@ function renderTeam() {
         ? `<span class="badge badge-red">Missing</span>`
         : `<span class="no-data">—</span>`;
 
-    const hrs = s.minutes > 0 ? (s.minutes / 60).toFixed(1) + ' h' : '<span class="no-data">—</span>';
+    const hrs = s.minutes <= 0 ? '<span class="no-data">—</span>'
+      : s.rangeMinutes != null
+        ? `<span title="${(s.rangeMinutes / 60).toFixed(1)} h over ${avgWeeks.length} week${avgWeeks.length !== 1 ? 's' : ''}">${(s.minutes / 60).toFixed(1)} h</span>`
+        : (s.minutes / 60).toFixed(1) + ' h';
     const rawComment = s.latestQ?.notes || '';
     const safeComment = rawComment.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const safeName = a.displayName.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
