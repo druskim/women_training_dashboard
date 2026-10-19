@@ -1,0 +1,215 @@
+{
+ "athletes": [
+  {
+   "sheet": "Jordan",
+   "hasContent": true,
+   "plan": {
+    "header": {
+     "athlete": "Jordan Taylor",
+     "position": "Centre",
+     "trainingBlock": "Fall Block 2 — Pre-Competition",
+     "dateCompleted": "2026-10-13",
+     "nextReview": "2026-11-24"
+    },
+    "offensive": [
+     {
+      "component": "Spin / Non Spin Starting Position / Set Up",
+      "rating": 4,
+      "priority": "No"
+     },
+     {
+      "component": "Spin Shot - Stage 1",
+      "rating": 4,
+      "priority": "No"
+     },
+     {
+      "component": "Spin Shot - Stage 2",
+      "rating": 3,
+      "priority": "No"
+     },
+     {
+      "component": "Spin Shot - Stage 3",
+      "rating": 3,
+      "priority": "No"
+     },
+     {
+      "component": "Spin Shot - Stage 4",
+      "rating": 2,
+      "priority": "Yes"
+     },
+     {
+      "component": "Non Spin - Steps",
+      "rating": 4,
+      "priority": "No"
+     },
+     {
+      "component": "Non Spin - Back Swing",
+      "rating": 4,
+      "priority": "No"
+     },
+     {
+      "component": "Non Spin - Release",
+      "rating": 3,
+      "priority": "No"
+     },
+     {
+      "component": "Spin / Non Spin Follow Through",
+      "rating": 3,
+      "priority": "No"
+     },
+     {
+      "component": "Accuracy",
+      "rating": 3,
+      "priority": "Yes"
+     }
+    ],
+    "defensive": [
+     {
+      "component": "Ready position",
+      "rating": 5,
+      "priority": "No"
+     },
+     {
+      "component": "Alignment",
+      "rating": 4,
+      "priority": "No"
+     },
+     {
+      "component": "First movement / reaction",
+      "rating": 3,
+      "priority": "Yes"
+     },
+     {
+      "component": "Body Position",
+      "rating": 4,
+      "priority": "No"
+     },
+     {
+      "component": "Extension / length",
+      "rating": 4,
+      "priority": "No"
+     },
+     {
+      "component": "Hand / arm position",
+      "rating": 4,
+      "priority": "No"
+     },
+     {
+      "component": "Leg Position",
+      "rating": 3,
+      "priority": "No"
+     },
+     {
+      "component": "Range",
+      "rating": 3,
+      "priority": "No"
+     },
+     {
+      "component": "Hold Position / Rollng forward / backwards",
+      "rating": 4,
+      "priority": "No"
+     },
+     {
+      "component": "Ball control",
+      "rating": 4,
+      "priority": "No"
+     }
+    ],
+    "priorities": [
+     [
+      "Release speed on the spin shot (Stage 4)",
+      "Target: average release speed of 55 km/h on video by the Nov review"
+     ],
+     [
+      "Shot accuracy to the corners",
+      "Target: 7/10 on the corner-target drill, tracked weekly in practice"
+     ],
+     [
+      "First movement on cross-court throws",
+      "Target: reaction time under 0.45 s on the defensive reaction drill"
+     ]
+    ],
+    "reflection": "Improved: my ready position and ball control are much more consistent, and I've hit every practice since August. My non-spin release is quicker.\n\nNeeds improvement: I lose speed at Stage 4 of the spin shot when I'm tired late in practice, and my first step on cross-court balls is still a beat late.",
+    "checkin": {
+     "actualHrs": 12.3,
+     "targetHrs": 10,
+     "hoursStatus": "Target met",
+     "loadStatus": "On target",
+     "acwrValue": 1.04,
+     "acwrStatus": "Optimal",
+     "participation": "Full",
+     "wellbeing": "Improving"
+    },
+    "dashboardReflection": "Yes. I'm averaging over 11 hours a week with steady load (ACWR around 1.0), so I can add shooting volume safely. Three of my weights sessions each week support release speed, and the Thursday interval session matches the repeated efforts I need on defence. My sleep score dips on double days — I'll protect bedtime on Mondays and Wednesdays.",
+    "nextAction": "Film 20 spin shots after Wednesday practice each week and log release speed; share the clip with coach before Friday's session.",
+    "coachFeedback": "Great consistency this block — training volume and attendance are exactly where they need to be. Keep the extra shooting volume to 20 reps so quality stays high, and bring the same intent to the reaction drill as you do to shooting.",
+    "ist": [
+     {
+      "discipline": "ATHLETIC THERAPY\nAlice Sobiesiak",
+      "items": [
+       {
+        "focus": "Shoulder health under higher throwing volume",
+        "actions": "Prehab circuit 3× per week before practice; monthly screen",
+        "measure": "Pain-free throwing; ROM within 5° side to side",
+        "links": "DTE 1",
+        "status": "On track"
+       },
+       {
+        "focus": "Left ankle stability",
+        "actions": "Balance and landing progressions in warm-up",
+        "measure": "Y-balance score within 4% side to side",
+        "links": "DTE 3",
+        "status": "In progress"
+       }
+      ]
+     },
+     {
+      "discipline": "STRENGTH & CONDITIONING\nJustin Staffiere",
+      "items": [
+       {
+        "focus": "Rotational power for release speed",
+        "actions": "Med-ball rotational throws and trap-bar jumps, 3× per week",
+        "measure": "Med-ball throw +10% by the Nov review",
+        "links": "DTE 1",
+        "status": "On track"
+       },
+       {
+        "focus": "Repeat-effort capacity on defence",
+        "actions": "Thursday interval session; 3-on / 3-off format",
+        "measure": "HR recovery under 60 s between efforts",
+        "links": "DTE 3",
+        "status": "In progress"
+       }
+      ]
+     },
+     {
+      "discipline": "MENTAL PERFORMANCE\nChloe Gagnon",
+      "items": [
+       {
+        "focus": "Pre-throw routine under pressure",
+        "actions": "Same 3-step routine on every throw in practice and games",
+        "measure": "Routine used on 9/10 throws (coach tally)",
+        "links": "DTE 2",
+        "status": "On track"
+       },
+       {
+        "focus": "Sleep on double-session days",
+        "actions": "Wind-down plan; lights out by 22:30 on Mon/Wed",
+        "measure": "Sleep score ≥ 4 on weekly check-in",
+        "links": "All",
+        "status": "In progress"
+       }
+      ]
+     }
+    ],
+    "istNotes": "S&C and AT share one throwing-volume plan so shoulder load and power work don't peak in the same week. MP routine is rehearsed in Wednesday shooting so it carries into the corner-target drill.",
+    "commitment": {
+     "athlete": "Jordan Taylor",
+     "coach": "Head Coach",
+     "date": "2026-10-13",
+     "nextReview": "2026-11-24"
+    }
+   }
+  }
+ ]
+}
