@@ -20,6 +20,7 @@ const CONFIG = {
   // How many past weeks to display in trend charts
   TREND_WEEKS: 12,
 
-  // Current season start date (ISO format) — used to limit data range
-  SEASON_START: '2025-09-01',
+  // 2027 season start (ISO format). From the first Monday on or after this date, charts,
+  // averages and the date filter only cover the season; before then everything is shown.
+  SEASON_START: '2026-11-01',
 };

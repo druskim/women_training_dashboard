@@ -1097,6 +1097,22 @@ function buildProfiles() {
 
 function isFilterActive() { return !!(FILTER_START || FILTER_END); }
 
+// First Mon–Sun week of the season (the first Monday on or after CONFIG.SEASON_START), or null
+// until that week arrives. Once the season is under way no view reaches back before it; older
+// weeks stay loaded so ACWR still has its chronic-load history.
+function seasonStartWk() {
+  if (!CONFIG.SEASON_START) return null;
+  const wk = getMondayOfWeek(CONFIG.SEASON_START);
+  const first = wk === CONFIG.SEASON_START ? wk : addWeeks(wk, 1);
+  return first <= getMondayOfWeek(new Date()) ? first : null;
+}
+
+// Drop week keys that fall before the season start
+function inSeason(wkKeys) {
+  const floor = seasonStartWk();
+  return floor ? wkKeys.filter(wk => wk >= floor) : wkKeys;
+}
+
 // Restrict an athlete's own week keys (weeks they have data for) to the active filter range.
 function filteredWeekList(weekList) {
   if (!isFilterActive()) return weekList;
@@ -1177,6 +1193,12 @@ function getDisplayStats(a) {
 
 function applyDateFilter() {
   FILTER_START = document.getElementById('filter-start').value || null;
+  // A range can't start before the season
+  const floor = seasonStartWk();
+  if (floor && FILTER_START && FILTER_START < floor) {
+    FILTER_START = floor;
+    document.getElementById('filter-start').value = floor;
+  }
   FILTER_END   = document.getElementById('filter-end').value   || null;
   onFilterChanged();
 }
@@ -1191,7 +1213,8 @@ function clearDateFilter() {
 
 function updateFilterStatus() {
   const el = document.getElementById('filter-status');
-  if (!isFilterActive()) { el.textContent = 'Showing all data'; return; }
+  const floor = seasonStartWk();
+  if (!isFilterActive()) { el.textContent = floor ? `Showing season from ${fmtDate(floor)}` : 'Showing all data'; return; }
   const s = FILTER_START ? fmtDate(getMondayOfWeek(FILTER_START)) : 'earliest data';
   const e = FILTER_END   ? fmtDate(getMondayOfWeek(FILTER_END))   : 'latest data';
   el.textContent = `Filtering: ${s} – ${e}`;
@@ -1929,6 +1952,7 @@ function renderIndividual(an) {
     const weeks = CONFIG.TREND_WEEKS;
     wkKeys = [];
     for (let w = weeks - 1; w >= 0; w--) wkKeys.push(addWeeks(a.currentWk, -w));
+    wkKeys = inSeason(wkKeys);
   }
 
   const weekLabels = [];
@@ -2121,6 +2145,9 @@ async function loadData() {
       if (!a.weekList.length) return min;
       return (!min || a.weekList[0] < min) ? a.weekList[0] : min;
     }, null);
+    const floor = seasonStartWk();
+    if (floor && (!EARLIEST_WEEK || EARLIEST_WEEK < floor)) EARLIEST_WEEK = floor;
+    if (floor) document.getElementById('filter-start').min = document.getElementById('filter-end').min = floor;
     updateFilterStatus();
     updateTeamTableHeaders();
     updateCmpWindowToggleState();
@@ -2352,6 +2379,7 @@ function renderCompare() {
   } else {
     wkKeys = [];
     for (let w = cmpWindow - 1; w >= 0; w--) wkKeys.push(addWeeks(currentWk, -w));
+    wkKeys = inSeason(wkKeys);
   }
   _cmpWeekLabels = wkKeys.map(fmtDate);
 
