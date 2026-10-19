@@ -1,0 +1,2260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Women's National Team Training Dashboard — 2025–26 Archive</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="config.js"></script>
+  <style>
+    :root {
+      --red:    #e63946;
+      --red-dk: #7a0012;
+      --bg:     #0f1117;
+      --card:   #1a1d27;
+      --text:   #e8eaf0;
+      --muted:  #6b7280;
+      --border: #2a2d3a;
+      --green:  #22c55e;
+      --yellow: #eab308;
+      --orange: #f97316;
+      --danger: #ef4444;
+      --blue:   #3b82f6;
+      --z-grey:   #9b9b9b;
+      --z-blue:   #3498db;
+      --z-green:  #2ecc71;
+      --z-yellow: #f1c40f;
+      --z-red:    #e74c3c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+           background: var(--bg); color: var(--text); font-size: 14px; min-width: 900px; }
+
+    /* HEADER */
+    header { background: var(--red-dk); color: #fff; padding: 0 24px;
+             display: flex; align-items: center; gap: 16px; height: 56px; }
+    header h1 { font-size: 18px; font-weight: 700; letter-spacing: .3px; flex: 1; }
+    header .meta { font-size: 12px; color: rgba(255,255,255,.7); }
+    header button { background: rgba(255,255,255,.18); border: none; color: #fff;
+                    padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+    header button:hover { background: rgba(255,255,255,.28); }
+
+    /* TABS */
+    nav { background: var(--red); display: flex; padding: 0 24px; }
+    nav button { background: none; border: none; color: rgba(255,255,255,.75);
+                 padding: 12px 20px; cursor: pointer; font-size: 14px; font-weight: 500;
+                 border-bottom: 3px solid transparent; transition: all .15s; }
+    nav button:hover { color: #fff; }
+    nav button.active { color: #fff; border-bottom-color: #fff; }
+
+    /* LAYOUT */
+    main { padding: 24px; max-width: 1400px; margin: 0 auto; }
+    section { display: none; }
+    section.active { display: block; }
+
+    /* SUMMARY CARDS */
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+             gap: 16px; margin-bottom: 24px; }
+    .card { background: var(--card); border-radius: 8px; padding: 18px 20px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.4); }
+    .card .label { font-size: 11px; text-transform: uppercase; letter-spacing: .6px;
+                   color: var(--muted); margin-bottom: 6px; }
+    .card .value { font-size: 28px; font-weight: 700; line-height: 1; }
+    .card .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .card.flag .value { color: var(--orange); }
+
+    /* TEAM TABLE */
+    .table-wrap { background: var(--card); border-radius: 8px;
+                  box-shadow: 0 1px 4px rgba(0,0,0,.08); overflow: hidden; }
+    .table-wrap h2 { padding: 16px 20px 12px; font-size: 15px; border-bottom: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 10px 14px; font-size: 11px; text-transform: uppercase;
+         letter-spacing: .5px; color: var(--muted); background: #13161f;
+         border-bottom: 1px solid var(--border); white-space: nowrap; cursor: pointer; }
+    th:hover { background: #1e2130; }
+    td { padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #1e2130; }
+    .athlete-name { font-weight: 600; }
+    .no-data { color: var(--muted); font-style: italic; }
+
+    /* BADGES */
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 12px;
+             font-size: 12px; font-weight: 600; white-space: nowrap; }
+    .badge-green  { background: #d4f5e5; color: #0d6e3d; }
+    .badge-yellow { background: #fff3cd; color: #856404; }
+    .badge-orange { background: #ffe5cc; color: #7a3700; }
+    .badge-red    { background: #fde8e8; color: #8b0000; }
+    .badge-blue   { background: #dbeafe; color: #1e40af; }
+    .badge-grey   { background: #f0f0f0; color: #555; }
+
+    /* WELLBEING MINI BARS */
+    .wb-row { display: flex; gap: 3px; align-items: center; }
+    .wb-pip { width: 14px; height: 14px; border-radius: 3px; }
+
+    /* INDIVIDUAL VIEW */
+    .athlete-selector { margin-bottom: 20px; }
+    .athlete-selector select { font-size: 16px; font-weight: 600; padding: 8px 14px;
+                                border: 1px solid var(--border); border-radius: 6px;
+                                background: var(--card); color: var(--text); cursor: pointer;
+                                color-scheme: dark; }
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                 gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: var(--card); border-radius: 8px; padding: 16px 18px;
+                 box-shadow: 0 1px 4px rgba(0,0,0,.4); }
+    .stat-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: .5px;
+                        color: var(--muted); margin-bottom: 4px; }
+    .stat-card .value { font-size: 24px; font-weight: 700; }
+    .stat-card .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* CHART GRID */
+    .chart-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    .chart-grid-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    @media (max-width: 900px) { .chart-grid-2, .chart-grid-3 { grid-template-columns: 1fr; } }
+    .chart-card { background: var(--card); border-radius: 8px; padding: 18px 20px;
+                  box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    .chart-card h3 { font-size: 13px; font-weight: 600; color: var(--muted);
+                     text-transform: uppercase; letter-spacing: .4px; margin-bottom: 14px; }
+    .chart-card canvas { max-height: 260px; }
+
+    /* HEALTH & NOTES */
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    @media (max-width: 700px) { .detail-grid { grid-template-columns: 1fr; } }
+    .detail-card { background: var(--card); border-radius: 8px; padding: 18px 20px;
+                   box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    .detail-card h3 { font-size: 13px; font-weight: 600; color: var(--muted);
+                      text-transform: uppercase; letter-spacing: .4px; margin-bottom: 12px; }
+    .detail-row { display: flex; justify-content: space-between; padding: 7px 0;
+                  border-bottom: 1px solid var(--border); font-size: 13px; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row .dl { color: var(--muted); }
+    .detail-row .dv { font-weight: 500; text-align: right; max-width: 60%; }
+
+    /* MISSED WORKOUTS TABLE */
+    .missed-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .missed-table th { text-align: left; padding: 8px 10px; background: #13161f;
+                       border-bottom: 1px solid var(--border); color: var(--muted);
+                       font-size: 11px; text-transform: uppercase; }
+    .missed-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); }
+    .missed-table tr:last-child td { border-bottom: none; }
+
+    /* NOTES */
+    .notes-text { font-size: 13px; line-height: 1.6; color: var(--text);
+                  background: #13161f; border-radius: 6px; padding: 12px 14px;
+                  border-left: 3px solid var(--red); white-space: pre-wrap; }
+
+    /* ROW COMMENT TOOLTIP */
+    #row-tooltip { position: fixed; display: none; background: var(--card);
+                   border: 1px solid var(--border); border-left: 3px solid var(--red);
+                   border-radius: 6px; padding: 10px 14px; font-size: 13px; line-height: 1.5;
+                   max-width: 320px; white-space: pre-wrap; pointer-events: none;
+                   z-index: 9999; box-shadow: 0 4px 16px rgba(0,0,0,.5); color: var(--text); }
+    #row-tooltip .tip-name { font-weight: 600; margin-bottom: 6px; color: var(--red); font-size: 12px;
+                             text-transform: uppercase; letter-spacing: .4px; }
+
+    /* LOADING / ERROR */
+    #loading { position: fixed; inset: 0; background: rgba(15,17,23,.92);
+               display: flex; flex-direction: column; align-items: center; justify-content: center;
+               z-index: 100; gap: 14px; }
+    #loading .spinner { width: 40px; height: 40px; border: 4px solid #eee;
+                        border-top-color: var(--red); border-radius: 50%;
+                        animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loading p { color: var(--muted); font-size: 14px; }
+    #error-banner { display: none; background: #fde8e8; border: 1px solid #f5a5a5;
+                    color: #8b0000; padding: 12px 20px; border-radius: 6px;
+                    margin-bottom: 20px; font-size: 13px; }
+
+    /* CHART TOGGLE BAR */
+    .chart-toggle-bar { display: flex; align-items: center; gap: 6px; margin-bottom: 16px; }
+    .chart-toggle-bar span { font-size: 12px; color: var(--muted); margin-right: 4px; }
+    .chart-toggle-btn { padding: 5px 14px; border: 1px solid var(--border); background: transparent;
+                        color: var(--muted); border-radius: 20px; cursor: pointer; font-size: 12px;
+                        font-weight: 500; transition: all .15s; }
+    .chart-toggle-btn:hover:not(.active) { border-color: var(--text); color: var(--text); }
+    .chart-toggle-btn.active { background: var(--red); border-color: var(--red); color: #fff; }
+
+    /* WELLBEING FILTER CHIPS */
+    .wb-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .wb-chip { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;
+               cursor: pointer; border: 2px solid; background: transparent;
+               opacity: 0.35; transition: opacity .15s; }
+    .wb-chip.active { opacity: 1; }
+    .wb-chip.stress { border-color: #e74c3c; color: #e74c3c; }
+    .wb-chip.positive { border-color: #22c55e; color: #22c55e; }
+
+    /* ZONE LEGEND */
+    .zone-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+    .zone-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+    .zone-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .zone-grey   { background: var(--z-grey); }
+    .zone-blue   { background: var(--z-blue); }
+    .zone-green  { background: var(--z-green); }
+    .zone-yellow { background: var(--z-yellow); }
+    .zone-red    { background: var(--z-red); }
+
+    /* PARTICIPATION STATUS */
+    .part-full    { color: var(--green); font-weight: 500; }
+    .part-injured { color: var(--orange); font-weight: 500; }
+    .part-reduced { color: var(--danger); font-weight: 500; }
+    .part-none    { color: var(--muted); }
+
+    .empty-state { padding: 40px; text-align: center; color: var(--muted); font-size: 14px; }
+
+    /* ACWR reference line label */
+    .acwr-ref { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+
+    /* INJURY MODAL */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65);
+                     z-index: 200; align-items: center; justify-content: center; padding: 24px; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: var(--card); border-radius: 10px; width: 100%; max-width: 640px;
+                 max-height: 80vh; display: flex; flex-direction: column;
+                 box-shadow: 0 8px 32px rgba(0,0,0,.6); }
+    .modal-header { display: flex; align-items: center; justify-content: space-between;
+                    padding: 18px 22px 14px; border-bottom: 1px solid var(--border); }
+    .modal-header h2 { font-size: 16px; font-weight: 700; }
+    .modal-header .modal-close { background: none; border: none; color: var(--muted);
+                                  font-size: 22px; cursor: pointer; line-height: 1; padding: 0 4px; }
+    .modal-header .modal-close:hover { color: var(--text); }
+    .modal-body { overflow-y: auto; padding: 18px 22px; }
+    .inj-athlete { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .inj-athlete:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+    .inj-athlete-name { font-size: 15px; font-weight: 700; margin-bottom: 10px; display: flex;
+                        align-items: center; gap: 10px; }
+    .inj-row { display: flex; gap: 8px; font-size: 13px; padding: 4px 0; }
+    .inj-label { color: var(--muted); min-width: 170px; flex-shrink: 0; }
+    .inj-value { color: var(--text); }
+    .card.flag.clickable { cursor: pointer; transition: background .15s; }
+    .card.flag.clickable:hover { background: #222536; }
+
+    /* SHARE BUTTON */
+    .athlete-selector { display: flex; align-items: center; gap: 12px; }
+    #share-btn { background: rgba(255,255,255,.08); border: 1px solid var(--border); color: var(--text);
+                 padding: 7px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; white-space: nowrap; }
+    #share-btn:hover { background: rgba(255,255,255,.15); }
+    .modal-empty { color: var(--muted); font-size: 14px; text-align: center; padding: 24px 0; }
+  </style>
+</head>
+<body>
+
+<!-- INJURY REPORT MODAL -->
+<div id="injury-modal" class="modal-overlay" onclick="closeInjuryModal(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="injury-modal-title">Injury Report</h2>
+      <button class="modal-close" onclick="closeInjuryModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="injury-modal-body"></div>
+  </div>
+</div>
+
+<div id="row-tooltip"></div>
+<div id="loading">
+  <div class="spinner"></div>
+  <p id="loading-msg">Loading data…</p>
+</div>
+
+<div id="demo-banner" style="display:none;background:#2563eb;color:#fff;text-align:center;padding:6px 16px;font-size:13px;font-weight:600;letter-spacing:.03em">
+  DEMO MODE — Athlete names have been anonymised
+</div>
+<header>
+  <h1>Women's National Team Training Dashboard — 2025–26 Season (Archive)</h1>
+  <a href="../../" style="color:#fff;font-size:13px;text-decoration:none;padding:7px 12px;border-radius:4px;background:rgba(255,255,255,.18)">Current Season →</a>
+  <span class="meta" id="last-updated"></span>
+  <button onclick="refreshData()">Refresh</button>
+</header>
+
+<nav>
+  <button class="active" onclick="showTab('team', this)">Team Overview</button>
+  <button onclick="showTab('individual', this)">Individual Athletes</button>
+  <button onclick="showTab('compare', this)">Compare Athletes</button>
+</nav>
+
+<div id="date-filter-bar" style="background:var(--card);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+  <span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Date Range</span>
+  <input type="date" id="filter-start" onchange="applyDateFilter()"
+         style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:4px;padding:5px 8px;font-size:13px;color-scheme:dark">
+  <span style="color:var(--muted);font-size:12px">to</span>
+  <input type="date" id="filter-end" onchange="applyDateFilter()"
+         style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:4px;padding:5px 8px;font-size:13px;color-scheme:dark">
+  <button onclick="clearDateFilter()" style="background:rgba(255,255,255,.08);border:1px solid var(--border);color:var(--text);padding:5px 12px;border-radius:4px;cursor:pointer;font-size:12px">Clear</button>
+  <span id="filter-status" style="font-size:12px;color:var(--muted);margin-left:4px">Showing all data</span>
+</div>
+
+<main>
+
+  <!-- ===== TEAM OVERVIEW ===== -->
+  <section id="tab-team" class="active">
+    <div id="error-banner"></div>
+    <div class="cards" id="summary-cards"></div>
+    <div class="table-wrap">
+      <h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span>Athlete Status</span>
+        <span id="team-week-toggle" style="display:flex;gap:6px;margin-left:auto;align-items:center">
+          <span id="team-week-range" style="font-weight:400;font-size:11px;color:var(--muted)"></span>
+          <button class="chart-toggle-btn active" id="team-week-prev" onclick="setTeamWeek('prev')" style="padding:3px 10px;font-size:11px">Last Week</button>
+          <button class="chart-toggle-btn" id="team-week-current" onclick="setTeamWeek('current')" style="padding:3px 10px;font-size:11px">This Week</button>
+        </span>
+      </h2>
+      <table id="team-table">
+        <thead>
+          <tr>
+            <th onclick="sortTable('name')">Athlete</th>
+            <th onclick="sortTable('acwr')">ACWR</th>
+            <th onclick="sortTable('hours')" id="th-hours">Time Trained (Last Week)</th>
+            <th onclick="sortTable('sessions')" id="th-sessions">Sessions (Last Week)</th>
+            <th onclick="sortTable('wellbeing')">Wellbeing</th>
+            <th onclick="sortTable('participation')">Participation</th>
+            <th onclick="sortTable('submitted')">Last Report</th>
+          </tr>
+        </thead>
+        <tbody id="team-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== INDIVIDUAL ===== -->
+  <section id="tab-individual">
+    <div class="athlete-selector">
+      <select id="athlete-select" onchange="renderIndividual(this.value)">
+        <option value="">— Select an athlete —</option>
+      </select>
+      <button id="share-btn" style="display:none" onclick="copyAthleteLink()">Copy Athlete Link</button>
+    </div>
+
+    <div class="stats-row" id="ind-stats"></div>
+
+    <div class="chart-toggle-bar">
+      <span>View:</span>
+      <button class="chart-toggle-btn" onclick="setChartMode('prev', this)">Past Week</button>
+      <button class="chart-toggle-btn active" onclick="setChartMode('month', this)">Past 8 Weeks</button>
+      <button class="chart-toggle-btn" onclick="setChartMode('avg', this)">Average Week</button>
+    </div>
+
+    <div class="chart-grid-2">
+      <div class="chart-card">
+        <h3 style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span>Weekly Training Load <span id="load-chart-hint" style="font-weight:400;font-size:11px;color:var(--muted)">— click a bar to see details</span></span>
+          <span style="display:flex;gap:4px;flex-shrink:0">
+            <button id="metric-btn-meps"  class="chart-toggle-btn active" onclick="setLoadMetric('meps',this)"  style="padding:3px 10px;font-size:11px">MEPs</button>
+            <button id="metric-btn-hours" class="chart-toggle-btn"        onclick="setLoadMetric('hours',this)" style="padding:3px 10px;font-size:11px">Hours</button>
+          </span>
+        </h3>
+        <canvas id="chart-load" style="cursor:pointer"></canvas>
+        <div id="load-week-info" style="display:none;margin-top:10px;padding:10px 14px;background:#13161f;border-radius:6px;border-left:3px solid var(--red)">
+          <span id="load-week-label" style="font-weight:600;font-size:13px"></span>
+          <span style="color:var(--muted);font-size:13px"> &nbsp;·&nbsp; </span>
+          <span id="load-week-hours" style="font-size:13px"></span>
+          <span style="color:var(--muted);font-size:13px"> &nbsp;·&nbsp; </span>
+          <span id="load-week-meps" style="font-size:13px;color:var(--muted)"></span>
+        </div>
+        <div class="zone-legend" id="zone-legend">
+          <div class="zone-item"><div class="zone-dot zone-grey"></div>Grey 50–59%</div>
+          <div class="zone-item"><div class="zone-dot zone-blue"></div>Blue 60–69%</div>
+          <div class="zone-item"><div class="zone-dot zone-green"></div>Green 70–79%</div>
+          <div class="zone-item"><div class="zone-dot zone-yellow"></div>Yellow 80–89%</div>
+          <div class="zone-item"><div class="zone-dot zone-red"></div>Red 90–100%</div>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>Acute:Chronic Workload Ratio</h3>
+        <canvas id="chart-acwr"></canvas>
+        <p class="acwr-ref">Optimal zone: 0.8 – 1.3 &nbsp;|&nbsp; Caution: 1.3 – 1.5 &nbsp;|&nbsp; High risk: &gt;1.5</p>
+      </div>
+    </div>
+
+    <div class="chart-grid-2">
+      <div class="chart-card">
+        <h3>Session Type Breakdown</h3>
+        <canvas id="chart-types"></canvas>
+        <p id="chart-types-empty" class="empty-state" style="display:none">No session data</p>
+      </div>
+      <div class="chart-card">
+        <h3>Wellbeing (Latest Week)</h3>
+        <canvas id="chart-radar"></canvas>
+        <p id="chart-radar-empty" class="empty-state" style="display:none">No wellbeing data</p>
+      </div>
+    </div>
+
+    <div class="chart-card" style="margin-bottom:20px">
+      <h3>Wellbeing Trends</h3>
+      <div class="wb-filters" id="wb-filters"></div>
+      <canvas id="chart-wb-trend" style="max-height:220px"></canvas>
+    </div>
+
+    <div class="detail-grid">
+      <div class="detail-card" id="ind-health">
+        <h3>Health &amp; Participation</h3>
+        <p class="empty-state">No data</p>
+      </div>
+      <div class="detail-card" id="ind-missed">
+        <h3>Unreported Workouts</h3>
+        <p class="empty-state">No data</p>
+      </div>
+    </div>
+
+    <div class="detail-card" id="ind-notes" style="margin-bottom:24px">
+      <h3>Latest Notes</h3>
+      <p class="empty-state">No notes submitted</p>
+    </div>
+  </section>
+
+  <!-- ===== COMPARE ===== -->
+  <section id="tab-compare">
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Athletes</div>
+      <div id="cmp-athlete-chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px">
+      <div class="chart-toggle-bar" style="margin-bottom:0">
+        <span>Window:</span>
+        <button class="chart-toggle-btn active" onclick="setCmpWindow(4, this)">4 Weeks</button>
+        <button class="chart-toggle-btn" onclick="setCmpWindow(8, this)">8 Weeks</button>
+        <button class="chart-toggle-btn" onclick="setCmpWindow(12, this)">12 Weeks</button>
+      </div>
+    </div>
+
+    <div class="chart-grid-2" style="margin-bottom:20px">
+      <div class="chart-card">
+        <h3 style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span>Weekly Training Load</span>
+          <span style="display:flex;gap:4px;flex-shrink:0">
+            <button id="cmp-metric-meps"  class="chart-toggle-btn active" onclick="setCmpMetric('meps',this)"  style="padding:3px 10px;font-size:11px">MEPs</button>
+            <button id="cmp-metric-hours" class="chart-toggle-btn"        onclick="setCmpMetric('hours',this)" style="padding:3px 10px;font-size:11px">Hours</button>
+          </span>
+        </h3>
+        <canvas id="cmp-chart-load" style="max-height:280px"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>ACWR Comparison</h3>
+        <canvas id="cmp-chart-acwr" style="max-height:280px"></canvas>
+        <p class="acwr-ref">Optimal zone: 0.8 – 1.3 &nbsp;|&nbsp; Caution: 1.3 – 1.5 &nbsp;|&nbsp; High risk: &gt;1.5</p>
+      </div>
+    </div>
+
+    <div class="chart-grid-2">
+      <div class="chart-card">
+        <h3>Session Type Breakdown <span style="font-weight:400;font-size:11px;color:var(--muted)">(hours, selected window)</span></h3>
+        <canvas id="cmp-chart-types" style="max-height:300px"></canvas>
+        <p id="cmp-types-empty" class="empty-state" style="display:none">No session data</p>
+      </div>
+      <div class="chart-card">
+        <h3>Wellbeing Radar <span style="font-weight:400;font-size:11px;color:var(--muted)">(latest week)</span></h3>
+        <canvas id="cmp-chart-radar" style="max-height:300px"></canvas>
+        <p id="cmp-radar-empty" class="empty-state" style="display:none">No wellbeing data for selected athletes</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// ============================================================
+//  ATHLETE LINK MODE — detect ?athlete= param
+//  DEMO MODE        — detect ?demo=true (anonymises names)
+// ============================================================
+const ATHLETE_PARAM = new URLSearchParams(window.location.search).get('athlete');
+const DEMO_MODE     = new URLSearchParams(window.location.search).get('demo') === 'true';
+
+// Date range filter — null/null means "show everything" (default)
+let FILTER_START  = null;
+let FILTER_END    = null;
+let EARLIEST_WEEK = null;
+
+// ============================================================
+//  DARK THEME — Chart.js global defaults
+// ============================================================
+Chart.defaults.color = '#9ca3af';
+Chart.defaults.borderColor = '#2a2d3a';
+Chart.defaults.backgroundColor = 'rgba(255,255,255,0.05)';
+
+// ============================================================
+//  UTILITIES
+// ============================================================
+
+const ZONE_COLORS = {
+  grey:   '#9b9b9b',
+  blue:   '#3498db',
+  green:  '#2ecc71',
+  yellow: '#f1c40f',
+  red:    '#e74c3c',
+};
+
+const MONTH_MAP = {
+  january:0, february:1, march:2, april:3, may:4, june:5,
+  july:6, august:7, september:8, october:9, november:10, december:11
+};
+
+const WB_KEYS = ['stress','enjoyment','sleep','eating','timeManagement','mood','motivation','confidence','mentalHealth','mentalPerformance'];
+const WB_LABELS = ['Stress','Enjoyment','Sleep','Eating','Time Mgmt','Mood','Motivation','Confidence','Mental Health','Mental Perf'];
+const WB_COLORS = ['#e74c3c','#2ecc71','#3498db','#9b59b6','#e67e22','#f1c40f','#1abc9c','#e91e63','#795548','#607d8b'];
+
+// The archive is frozen at CONFIG.AS_OF, so "this week" and ACWR stay as they were on that day
+function today() {
+  return CONFIG.AS_OF ? new Date(CONFIG.AS_OF + 'T12:00:00') : new Date();
+}
+
+function getMondayOfWeek(dateInput) {
+  // Weeks run Monday to Sunday
+  const d = new Date(dateInput);
+  if (isNaN(d)) return null;
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day; // Sunday rolls back 6, others roll back to Monday
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString().split('T')[0];
+}
+
+function addWeeks(weekKey, n) {
+  const d = new Date(weekKey);
+  d.setDate(d.getDate() + n * 7);
+  return d.toISOString().split('T')[0];
+}
+
+function getWeekKeyFromQ(month, dayStr) {
+  const m = MONTH_MAP[month?.toLowerCase()?.trim()];
+  if (m === undefined) return null;
+  const day = parseInt(dayStr);
+  if (isNaN(day)) return null;
+  const now = today();
+  let year = now.getFullYear();
+  if (m > now.getMonth() + 2) year--;
+  // Questionnaire reports the Monday — that is the week start
+  return new Date(year, m, day).toISOString().split('T')[0];
+}
+
+function normalizeFromFile(f) {
+  return f?.replace(/\.csv$/i, '').replace(/_/g, ' ').toLowerCase().trim() || '';
+}
+
+function normalizeName(n) { return n?.toLowerCase().trim() || ''; }
+
+// Maps variant spellings → canonical name
+const ATHLETE_ALIASES = {
+  'maryam salizadeh':  'maryam salehizadeh',
+  'maryam salehi':     'maryam salehizadeh',
+};
+function resolveAlias(an) { return ATHLETE_ALIASES[an] || an; }
+
+function parseScore(v) {
+  if (v == null || v === '') return null;
+  const m = v.toString().trim().match(/^(\d+)/);
+  return m ? parseInt(m[1]) : null;
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' });
+}
+
+function capitalize(s) {
+  return s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+function acwrBadge(v) {
+  if (v == null) return '<span class="badge badge-grey">N/A</span>';
+  const c = v < 0.8 ? 'blue' : v <= 1.3 ? 'green' : v <= 1.5 ? 'yellow' : 'red';
+  return `<span class="badge badge-${c}">${v.toFixed(2)}</span>`;
+}
+
+function acwrColor(v) {
+  if (v == null) return '#9b9b9b';
+  return v < 0.8 ? '#3498db' : v <= 1.3 ? '#1ea868' : v <= 1.5 ? '#e0a800' : '#d93025';
+}
+
+function wbComposite(wb) {
+  if (!wb) return null;
+  const vals = WB_KEYS.map((k,i) => {
+    const v = wb[k];
+    if (v == null) return null;
+    // Invert stress (lower is better → make higher = better for composite)
+    return k === 'stress' ? (6 - v) : v;
+  }).filter(v => v != null);
+  if (!vals.length) return null;
+  return vals.reduce((a,b) => a+b, 0) / vals.length;
+}
+
+function wbBadge(avg) {
+  if (avg == null) return '<span class="badge badge-grey">N/A</span>';
+  const c = avg >= 4 ? 'green' : avg >= 3 ? 'yellow' : avg >= 2 ? 'orange' : 'red';
+  return `<span class="badge badge-${c}">${avg.toFixed(1)}</span>`;
+}
+
+function participationClass(p) {
+  if (!p) return 'part-none';
+  const l = p.toLowerCase();
+  if (l.includes('without')) return 'part-full';
+  if (l.includes('full participation') && l.includes('with')) return 'part-injured';
+  if (l.includes('reduced')) return 'part-reduced';
+  return 'part-none';
+}
+
+function participationShort(p) {
+  if (!p) return '—';
+  const l = p.toLowerCase();
+  if (l.includes('without')) return 'Full';
+  if (l.includes('full') && l.includes('with')) return 'Full + Injury';
+  if (l.includes('reduced')) return 'Reduced';
+  return p.length > 30 ? p.substring(0, 30) + '…' : p;
+}
+
+// ============================================================
+//  SESSION TYPE DECODER
+// ============================================================
+
+const SESSION_TYPE_MAP = {
+  'W': 'Weights',
+  'G': 'Goalball Practice',
+  'O': 'Other',
+  'E': 'Aerobic Conditioning',
+  'M': 'Stretching & Mobility',
+  'H': 'High Intensity Interval Training',
+  'N': 'Anaerobic Conditioning',
+  'R': 'Recovery Workout',
+};
+
+// A part is treated as a code only if the letter stands alone:
+// single char, or followed by a non-letter (space, dash, digit, end of string).
+// This prevents "Workout" → "Weights", etc.
+function isCodePrefix(part) {
+  return part.length === 1 || !/[a-zA-Z]/.test(part[1]);
+}
+
+// Keyword fallback for free-text entries that don't use letter codes
+const SESSION_KEYWORDS = [
+  [/^goalball\b/i,  'Goalball Practice'],
+  [/^weight/i,      'Weights'],
+  [/^workout/i,     'Weights'],
+  [/^recover/i,     'Recovery Workout'],
+];
+
+function keywordMatch(part) {
+  for (const [re, type] of SESSION_KEYWORDS) {
+    if (re.test(part)) return type;
+  }
+  return null;
+}
+
+function decodeSessionType(raw) {
+  if (!raw) return 'Other';
+  const trimmed = raw.trim();
+  const code = trimmed.charAt(0).toUpperCase();
+  if (SESSION_TYPE_MAP[code] && isCodePrefix(trimmed)) return SESSION_TYPE_MAP[code];
+  return keywordMatch(trimmed) || 'Other';
+}
+
+function decodeSessionTypes(raw) {
+  if (!raw) return ['Other'];
+  // Split on common separators: "and", "&", "/", ","
+  const parts = raw.split(/\s*(?:and|&|\/|,)\s*/i).map(p => p.trim()).filter(Boolean);
+  const types = new Set();
+  for (const part of parts) {
+    const code = part.charAt(0).toUpperCase();
+    if (SESSION_TYPE_MAP[code] && isCodePrefix(part)) {
+      types.add(SESSION_TYPE_MAP[code]);
+    } else {
+      const kw = keywordMatch(part);
+      if (kw) {
+        types.add(kw);
+      } else {
+        // Try extracting individual known letters (e.g. "WE")
+        const letters = part.toUpperCase().split('').filter(c => SESSION_TYPE_MAP[c]);
+        if (letters.length > 1) {
+          letters.forEach(c => types.add(SESSION_TYPE_MAP[c]));
+        } else {
+          types.add('Other');
+        }
+      }
+    }
+  }
+  return types.size ? [...types] : ['Other'];
+}
+
+// ============================================================
+//  MEP CALCULATION
+// ============================================================
+
+function getZone(hr, maxHR) {
+  if (!hr || !maxHR || maxHR <= 0) return null;
+  const pct = (hr / maxHR) * 100;
+  if (pct >= 90) return 'red';
+  if (pct >= 80) return 'yellow';
+  if (pct >= 70) return 'green';
+  if (pct >= 60) return 'blue';
+  if (pct >= 50) return 'grey';
+  return null;
+}
+
+const ZONE_MEPS = { grey: 1, blue: 2, green: 3, yellow: 4, red: 5 };
+
+function rpeToZone(rpe) {
+  if (!rpe || rpe <= 0) return 'blue';
+  if (rpe <= 2) return 'grey';
+  if (rpe <= 4) return 'blue';
+  if (rpe <= 6) return 'green';
+  if (rpe <= 8) return 'yellow';
+  return 'red';
+}
+
+function calcMissedLoad(missed) {
+  if (!missed || !missed.length) return null;
+  const load = { minutes: 0, meps: 0, mepsByZone: {grey:0,blue:0,green:0,yellow:0,red:0}, minutesByType: {} };
+  for (const m of missed) {
+    const mins = (m.duration || 0) * 60;
+    if (mins <= 0) continue;
+    const zone = rpeToZone(m.rpe);
+    load.minutes += mins;
+    load.meps    += mins * ZONE_MEPS[zone];
+    load.mepsByZone[zone] += mins * ZONE_MEPS[zone];
+    if (m.type) {
+      load.minutesByType[m.type] = (load.minutesByType[m.type] || 0) + mins;
+    }
+  }
+  return load.minutes > 0 ? load : null;
+}
+
+function mergeWithMissed(hr, missedLoad) {
+  if (!missedLoad) return hr;
+  const base = hr || { meps:0, mepsByZone:{grey:0,blue:0,green:0,yellow:0,red:0},
+                       sessionTypes:[], minutesByType:{}, count:0, minutes:0 };
+  const mergedTypes = { ...base.minutesByType };
+  for (const [type, mins] of Object.entries(missedLoad.minutesByType || {})) {
+    mergedTypes[type] = (mergedTypes[type] || 0) + mins;
+  }
+  return {
+    ...base,
+    minutes:    base.minutes + missedLoad.minutes,
+    meps:       base.meps    + missedLoad.meps,
+    mepsByZone: {
+      grey:   (base.mepsByZone?.grey   || 0) + missedLoad.mepsByZone.grey,
+      blue:   (base.mepsByZone?.blue   || 0) + missedLoad.mepsByZone.blue,
+      green:  (base.mepsByZone?.green  || 0) + missedLoad.mepsByZone.green,
+      yellow: (base.mepsByZone?.yellow || 0) + missedLoad.mepsByZone.yellow,
+      red:    (base.mepsByZone?.red    || 0) + missedLoad.mepsByZone.red,
+    },
+    minutesByType: mergedTypes,
+    hasMissed: true,
+  };
+}
+
+// ============================================================
+//  DATA LOADING
+// ============================================================
+
+function fetchCSV(url, label) {
+  return new Promise((resolve, reject) => {
+    Papa.parse(url, {
+      download: true,
+      skipEmptyLines: true,
+      complete: r => resolve(r.data),
+      error: (e) => reject(new Error(`Failed to load ${label}: ${e.type || e.message || 'Network/CORS error — the URL may be blocked or unreachable'}`)),
+    });
+  });
+}
+
+// ============================================================
+//  HR DATA PROCESSING
+// ============================================================
+
+function processHR(rows) {
+  if (!rows.length) return {};
+  const h = rows[0];
+  const C = {
+    SID:  h.indexOf('session_id'),
+    TS:   h.indexOf('time_stamp'),
+    HR:   h.indexOf('heart_rate'),
+    TYPE: h.indexOf('session_type'),
+    MHR:  h.indexOf('hr_peak_myzone'),
+    FILE: h.indexOf('file_name'),
+  };
+
+  // Build per-session aggregates first
+  const sessions = {};
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r[C.FILE] || !r[C.SID]) continue;
+    const athlete = resolveAlias(normalizeFromFile(r[C.FILE]));
+    const sid = r[C.SID];
+    const key = `${athlete}||${sid}`;
+    if (!sessions[key]) {
+      sessions[key] = {
+        athlete,
+        sid,
+        type: r[C.TYPE] || '',
+        date: r[C.TS]?.split('T')[0] || '',
+        maxHR: parseFloat(r[C.MHR]) || 0,
+        meps: 0,
+        mepsByZone: { grey:0, blue:0, green:0, yellow:0, red:0 },
+        minutes: 0,
+      };
+    }
+    const s = sessions[key];
+    const mhr = parseFloat(r[C.MHR]) || s.maxHR;
+    if (mhr > s.maxHR) s.maxHR = mhr;
+    const hr = parseFloat(r[C.HR]);
+    const zone = getZone(hr, s.maxHR || mhr);
+    if (zone) {
+      const m = ZONE_MEPS[zone];
+      s.meps += m;
+      s.mepsByZone[zone] += m;
+    }
+    s.minutes += 1;
+    // Keep earliest timestamp as session date
+    const ts = r[C.TS]?.split('T')[0];
+    if (ts && (!s.date || ts < s.date)) s.date = ts;
+  }
+
+  // Roll up to athlete × week
+  const out = {}; // athleteName → { weekKey → { meps, mepsByZone, sessionTypes, count, minutes } }
+  for (const s of Object.values(sessions)) {
+    const wk = getMondayOfWeek(s.date);
+    if (!wk) continue;
+    if (!out[s.athlete]) out[s.athlete] = {};
+    if (!out[s.athlete][wk]) {
+      out[s.athlete][wk] = { meps:0, mepsByZone:{grey:0,blue:0,green:0,yellow:0,red:0},
+                              sessionTypes:[], minutesByType:{}, count:0, minutes:0 };
+    }
+    const w = out[s.athlete][wk];
+    w.meps += s.meps;
+    w.minutes += s.minutes;
+    w.count += 1;
+    if (s.type) {
+      w.sessionTypes.push(s.type);
+      const types = decodeSessionTypes(s.type);
+      const splitMinutes = s.minutes / types.length;
+      for (const t of types) {
+        w.minutesByType[t] = (w.minutesByType[t] || 0) + splitMinutes;
+      }
+    }
+    for (const z of ['grey','blue','green','yellow','red']) w.mepsByZone[z] += s.mepsByZone[z];
+  }
+  return out;
+}
+
+// ============================================================
+//  QUESTIONNAIRE PROCESSING
+// ============================================================
+
+// Column indices
+const Q = {
+  TS:0, MONTH:1, WDAY:2, NAME:3,
+  HAS_W1:4, W1T:5, W1D:6, W1R:7,
+  HAS_W2:8, W2T:9, W2D:10, W2R:11,
+  HAS_W3:12, W3T:13, W3D:14, W3R:15,
+  HAS_W4:16,
+  PART:17, MOD:18, PERF:19, PAIN:20,
+  PREV:21, INJ_WHEN:22, INJ_TT:23, INJ_TM:24,
+  INJ_CP:25, INJ_CM:26, TRAUMA:27, OVERUSE:28, ILL:29,
+  STRESS:30, ENJOY:31, SLEEP:32, EAT:33,
+  TIME:34, MOOD:35, MOTIV:36, CONF:37,
+  MH:38, MP:39, NOTES:40,
+};
+
+function processQuestionnaire(rows) {
+  if (!rows.length) return {};
+  const data = {}; // athleteNorm → { weekKey → entry }
+
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    const name = r[Q.NAME]?.trim();
+    if (!name) continue;
+    const an = resolveAlias(normalizeName(name));
+    const wk = getWeekKeyFromQ(r[Q.MONTH], r[Q.WDAY]);
+    if (!wk) continue;
+    const ts = r[Q.TS] || '';
+
+    const missed = [];
+    const tryAdd = (has, type, dur, rpe) => {
+      if (has?.toLowerCase().includes('yes') && type?.trim()) {
+        missed.push({
+          type: type.trim(),
+          duration: parseFloat(dur) || 0,
+          rpe: parseScore(rpe),
+        });
+      }
+    };
+    tryAdd(r[Q.HAS_W1], r[Q.W1T], r[Q.W1D], r[Q.W1R]);
+    tryAdd(r[Q.HAS_W2], r[Q.W2T], r[Q.W2D], r[Q.W2R]);
+    tryAdd(r[Q.HAS_W3], r[Q.W3T], r[Q.W3D], r[Q.W3R]);
+
+    const part = r[Q.PART]?.trim() || '';
+    const entry = {
+      ts, name, an, wk, missed, participation: part,
+      hasFlag: part.toLowerCase().includes('with injury') || part.toLowerCase().includes('reduced'),
+      mod: r[Q.MOD]?.trim() || '',
+      perf: r[Q.PERF]?.trim() || '',
+      pain: r[Q.PAIN]?.trim() || '',
+      injWhen: r[Q.INJ_WHEN]?.trim() || '',
+      wellbeing: {
+        stress:        parseScore(r[Q.STRESS]),
+        enjoyment:     parseScore(r[Q.ENJOY]),
+        sleep:         parseScore(r[Q.SLEEP]),
+        eating:        parseScore(r[Q.EAT]),
+        timeManagement:parseScore(r[Q.TIME]),
+        mood:          parseScore(r[Q.MOOD]),
+        motivation:    parseScore(r[Q.MOTIV]),
+        confidence:    parseScore(r[Q.CONF]),
+        mentalHealth:  parseScore(r[Q.MH]),
+        mentalPerformance: parseScore(r[Q.MP]),
+      },
+      notes: r[Q.NOTES]?.trim() || '',
+    };
+
+    if (!data[an]) data[an] = {};
+    if (!data[an][wk] || ts > data[an][wk].ts) data[an][wk] = entry;
+  }
+  return data;
+}
+
+// ============================================================
+//  ACWR
+// ============================================================
+
+function calcACWR(hrWeeks, weekKey) {
+  const acute = hrWeeks[weekKey]?.meps || 0;
+
+  // Weighted chronic: more recent weeks weighted higher, zero weeks excluded
+  const weights = [4, 3, 2, 1]; // index 0 = last week, index 3 = 4 weeks ago
+  let weightedSum = 0;
+  let totalWeight = 0;
+  for (let w = 1; w <= 4; w++) {
+    const key = addWeeks(weekKey, -w);
+    const meps = hrWeeks[key]?.meps || 0;
+    if (meps === 0) continue; // skip missing/zero weeks
+    const weight = weights[w - 1];
+    weightedSum += meps * weight;
+    totalWeight += weight;
+  }
+
+  if (totalWeight === 0) return null;
+  const chronic = weightedSum / totalWeight;
+  return acute / chronic;
+}
+
+// ============================================================
+//  BUILD ATHLETE PROFILES
+// ============================================================
+
+let ATHLETES = {};   // keyed by normalised name
+let HR_DATA = {};
+let Q_DATA  = {};
+
+const EXCLUDED_ATHLETES = ['whitney bogart'];
+
+function buildProfiles() {
+  const allNames = new Set([...Object.keys(HR_DATA), ...Object.keys(Q_DATA)]);
+  const currentWk = getMondayOfWeek(today());
+  const prevWk    = addWeeks(currentWk, -1);
+
+  const profiles = {};
+  for (const an of allNames) {
+    if (EXCLUDED_ATHLETES.includes(an)) continue;
+    const hrWks = HR_DATA[an] || {};
+    const qWks  = Q_DATA[an]  || {};
+
+    const allWks = Array.from(new Set([...Object.keys(hrWks), ...Object.keys(qWks)])).sort();
+
+    // Merge HR meps with missed workout meps so ACWR reflects total load
+    const mergedMepsByWk = {};
+    for (const wk of allWks) {
+      const missedMeps = calcMissedLoad(qWks[wk]?.missed || [])?.meps || 0;
+      mergedMepsByWk[wk] = { meps: (hrWks[wk]?.meps || 0) + missedMeps };
+    }
+
+    const weeks = {};
+    for (const wk of allWks) {
+      weeks[wk] = { hr: hrWks[wk] || null, q: qWks[wk] || null, acwr: calcACWR(mergedMepsByWk, wk) };
+    }
+
+    const latestQWk = Object.keys(qWks).sort().pop() || null;
+    const latestHRWk = Object.keys(hrWks).sort().pop() || null;
+
+    const latestCompletedHRWk = Object.keys(hrWks).filter(wk => wk < currentWk).sort().pop() || null;
+    const curACWR = weeks[prevWk]?.acwr ?? (latestCompletedHRWk ? weeks[latestCompletedHRWk]?.acwr : null) ?? null;
+    const curMEPs = hrWks[currentWk]?.meps ?? hrWks[latestHRWk]?.meps ?? 0;
+    // Use current week Q data if available, fall back to previous week (athletes often submit end-of-week)
+    const curQWk = qWks[currentWk] ? currentWk : (qWks[prevWk] ? prevWk : null);
+    const curMissedLoad = calcMissedLoad(curQWk ? (qWks[curQWk]?.missed || []) : []);
+    const curMinutes = (hrWks[currentWk]?.minutes ?? hrWks[latestHRWk]?.minutes ?? 0) + (curMissedLoad?.minutes || 0);
+    const curSessions = (hrWks[currentWk]?.count ?? hrWks[latestHRWk]?.count ?? 0) + (curQWk ? (qWks[curQWk]?.missed?.length || 0) : 0);
+    const latestQ = latestQWk ? qWks[latestQWk] : null;
+    const hasQData = Object.keys(qWks).length > 0;
+    const hasCurrentReport = !!(qWks[currentWk] || qWks[prevWk]);
+
+    profiles[an] = {
+      an, displayName: capitalize(an),
+      weeks, weekList: allWks,
+      currentWk, latestQWk, latestHRWk,
+      curACWR, curMEPs, curMinutes, curSessions,
+      latestWB: latestQ?.wellbeing || null,
+      latestPart: latestQ?.participation || '',
+      hasFlag: latestQ?.hasFlag || false,
+      hasQData, hasCurrentReport,
+    };
+  }
+  return profiles;
+}
+
+// ============================================================
+//  DATE RANGE FILTER
+// ============================================================
+
+function isFilterActive() { return !!(FILTER_START || FILTER_END); }
+
+// Restrict an athlete's own week keys (weeks they have data for) to the active filter range.
+function filteredWeekList(weekList) {
+  if (!isFilterActive()) return weekList;
+  const startWk = FILTER_START ? getMondayOfWeek(FILTER_START) : null;
+  const endWk   = FILTER_END   ? getMondayOfWeek(FILTER_END)   : null;
+  return weekList.filter(wk => (!startWk || wk >= startWk) && (!endWk || wk <= endWk));
+}
+
+// Continuous list of Monday week-keys between two dates (inclusive) — used to build chart x-axes.
+function weekRangeKeys(startDate, endDate) {
+  const startWk = getMondayOfWeek(startDate);
+  const endWk   = getMondayOfWeek(endDate);
+  if (!startWk || !endWk) return [];
+  const keys = [];
+  let cur = startWk;
+  let guard = 0;
+  while (cur <= endWk && guard < 520) { // guard: ~10yr cap against bad input
+    keys.push(cur);
+    cur = addWeeks(cur, 1);
+    guard++;
+  }
+  return keys;
+}
+
+// Aggregate an athlete's stats over a set of their own week keys (used when a date filter is active).
+function computeRangeStats(a, weekKeys) {
+  let minutes = 0, sessions = 0, latestQWk = null, lastDataWk = null;
+  for (const wk of weekKeys) {
+    const w = a.weeks[wk];
+    if (!w) continue;
+    const missedLoad = calcMissedLoad(w.q?.missed || []);
+    const merged = mergeWithMissed(w.hr, missedLoad);
+    if (merged) {
+      minutes  += merged.minutes || 0;
+      sessions += (w.hr?.count || 0) + (w.q?.missed?.length || 0);
+    }
+    if (w.hr || w.q) lastDataWk = wk;
+    if (w.q) latestQWk = wk;
+  }
+  const acwr = lastDataWk ? (a.weeks[lastDataWk]?.acwr ?? null) : null;
+  const latestQ = latestQWk ? a.weeks[latestQWk].q : null;
+  return {
+    acwr, minutes, sessions, latestQWk,
+    latestWB: latestQ?.wellbeing || null,
+    latestPart: latestQ?.participation || '',
+    hasFlag: latestQ?.hasFlag || false,
+    hasQData: weekKeys.some(wk => a.weeks[wk]?.q),
+    hasCurrentReport: !!latestQWk,
+    latestQ,
+  };
+}
+
+// Single source of truth for "current" display stats — respects the active date filter.
+function getDisplayStats(a) {
+  if (!isFilterActive()) {
+    return {
+      acwr: a.curACWR, minutes: a.curMinutes, sessions: a.curSessions,
+      latestWB: a.latestWB, latestPart: a.latestPart, hasFlag: a.hasFlag,
+      hasQData: a.hasQData, hasCurrentReport: a.hasCurrentReport, latestQWk: a.latestQWk,
+      latestQ: a.latestQWk ? a.weeks[a.latestQWk]?.q : null,
+    };
+  }
+  return computeRangeStats(a, filteredWeekList(a.weekList));
+}
+
+function applyDateFilter() {
+  FILTER_START = document.getElementById('filter-start').value || null;
+  FILTER_END   = document.getElementById('filter-end').value   || null;
+  onFilterChanged();
+}
+
+function clearDateFilter() {
+  FILTER_START = null;
+  FILTER_END   = null;
+  document.getElementById('filter-start').value = '';
+  document.getElementById('filter-end').value   = '';
+  onFilterChanged();
+}
+
+function updateFilterStatus() {
+  const el = document.getElementById('filter-status');
+  if (!isFilterActive()) { el.textContent = 'Showing all data'; return; }
+  const s = FILTER_START ? fmtDate(getMondayOfWeek(FILTER_START)) : 'earliest data';
+  const e = FILTER_END   ? fmtDate(getMondayOfWeek(FILTER_END))   : 'latest data';
+  el.textContent = `Filtering: ${s} – ${e}`;
+}
+
+// Team table week toggle: 'prev' = last full Mon–Sun week, 'current' = this week so far
+let TEAM_WEEK = 'prev';
+
+function teamWeekKey() {
+  const currentWk = getMondayOfWeek(today());
+  return TEAM_WEEK === 'prev' ? addWeeks(currentWk, -1) : currentWk;
+}
+
+function setTeamWeek(mode) {
+  TEAM_WEEK = mode;
+  updateTeamTableHeaders();
+  renderTeam();
+}
+
+function updateTeamTableHeaders() {
+  const active  = isFilterActive();
+  const label   = TEAM_WEEK === 'prev' ? 'Last Week' : 'This Week';
+  const hoursTh = document.getElementById('th-hours');
+  const sessTh  = document.getElementById('th-sessions');
+  if (hoursTh) hoursTh.textContent = active ? 'Time Trained (range)' : `Time Trained (${label})`;
+  if (sessTh)  sessTh.textContent  = active ? 'Sessions (range)'    : `Sessions (${label})`;
+
+  // The week toggle is superseded by an active date filter — grey it out
+  for (const mode of ['prev', 'current']) {
+    const b = document.getElementById(`team-week-${mode}`);
+    if (!b) continue;
+    b.classList.toggle('active', mode === TEAM_WEEK);
+    b.disabled      = active;
+    b.style.opacity = active ? '0.4' : '';
+    b.style.cursor  = active ? 'not-allowed' : '';
+  }
+  const rangeEl = document.getElementById('team-week-range');
+  if (rangeEl) {
+    const [y, m, d] = teamWeekKey().split('-').map(Number);
+    const sunday = new Date(y, m - 1, d + 6).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' });
+    rangeEl.textContent = active ? '' : `${fmtDate(teamWeekKey())} – ${sunday}`;
+  }
+}
+
+// The Compare tab's 4/8/12-week toggle is superseded by an active date filter — grey it out
+function updateCmpWindowToggleState() {
+  const active = isFilterActive();
+  document.querySelectorAll('#tab-compare .chart-toggle-bar .chart-toggle-btn').forEach(b => {
+    b.disabled      = active;
+    b.style.opacity = active ? '0.4' : '';
+    b.style.cursor  = active ? 'not-allowed' : '';
+  });
+}
+
+function onFilterChanged() {
+  updateFilterStatus();
+  updateTeamTableHeaders();
+  updateCmpWindowToggleState();
+  renderTeam();
+  const an = document.getElementById('athlete-select').value;
+  if (an) renderIndividual(an);
+  renderCompare();
+}
+
+// ============================================================
+//  DEMO MODE — replace display names with "Athlete N"
+// ============================================================
+
+function anonymizeAthletes() {
+  const sorted = Object.values(ATHLETES).sort((a, b) => a.displayName.localeCompare(b.displayName));
+  sorted.forEach((a, i) => {
+    ATHLETES[a.an].displayName = `Athlete ${i + 1}`;
+  });
+}
+
+// ============================================================
+//  TEAM OVERVIEW
+// ============================================================
+
+let sortKey = 'name';
+let sortDir = 1;
+
+function renderTeam() {
+  const list = Object.values(ATHLETES);
+  // Without a date filter, hours/sessions reflect only the toggled week (no fallback to older weeks)
+  const teamWk = teamWeekKey();
+  const statsMap = new Map(list.map(a => {
+    const s = getDisplayStats(a);
+    if (isFilterActive()) return [a.an, s];
+    const wkStats = computeRangeStats(a, [teamWk]);
+    return [a.an, { ...s, minutes: wkStats.minutes, sessions: wkStats.sessions }];
+  }));
+
+  // Summary cards
+  const flagged  = list.filter(a => statsMap.get(a.an).hasFlag).length;
+  const missing  = list.filter(a => { const s = statsMap.get(a.an); return s.hasQData && !s.hasCurrentReport; }).length;
+  const acwrVals = list.map(a => statsMap.get(a.an).acwr).filter(v => v != null);
+  const avgACWR  = acwrVals.length ? (acwrVals.reduce((a,b)=>a+b,0)/acwrVals.length).toFixed(2) : '—';
+  const periodLabel = isFilterActive() ? 'selected range' : 'this week';
+
+  document.getElementById('summary-cards').innerHTML = `
+    <div class="card"><div class="label">Athletes</div><div class="value">${list.length}</div><div class="sub">in dataset</div></div>
+    <div class="card"><div class="label">Avg ACWR</div><div class="value">${avgACWR}</div><div class="sub">latest week</div></div>
+    <div class="card flag clickable" onclick="showInjuryReport()"><div class="label">Injury Flags</div><div class="value">${flagged}</div><div class="sub">athletes ${periodLabel} · click for report</div></div>
+    <div class="card flag"><div class="label">Missing Reports</div><div class="value">${missing}</div><div class="sub">no recent submission</div></div>
+  `;
+
+  const sorted = [...list].sort((a, b) => {
+    const sa = statsMap.get(a.an), sb = statsMap.get(b.an);
+    let av, bv;
+    if (sortKey === 'name')          { av = a.displayName; bv = b.displayName; }
+    else if (sortKey === 'acwr')     { av = sa.acwr ?? -1; bv = sb.acwr ?? -1; }
+    else if (sortKey === 'hours')    { av = sa.minutes; bv = sb.minutes; }
+    else if (sortKey === 'sessions') { av = sa.sessions; bv = sb.sessions; }
+    else if (sortKey === 'wellbeing'){ av = wbComposite(sa.latestWB) ?? -1; bv = wbComposite(sb.latestWB) ?? -1; }
+    else if (sortKey === 'submitted'){ av = sa.latestQWk || ''; bv = sb.latestQWk || ''; }
+    else if (sortKey === 'participation') { av = sa.latestPart; bv = sb.latestPart; }
+    if (av < bv) return -1 * sortDir;
+    if (av > bv) return 1 * sortDir;
+    return 0;
+  });
+
+  const tbody = document.getElementById('team-tbody');
+  tbody.innerHTML = sorted.map(a => {
+    const s = statsMap.get(a.an);
+    const wbPips = WB_KEYS.map((k, idx) => {
+      const v = s.latestWB?.[k];
+      if (v == null) return `<div class="wb-pip" style="background:#2a2d3a" title="${WB_LABELS[idx]}: N/A"></div>`;
+      const disp = (k === 'stress') ? (6 - v) : v;
+      const col = disp >= 4 ? '#1ea868' : disp >= 3 ? '#f1c40f' : disp >= 2 ? '#e06c00' : '#d93025';
+      return `<div class="wb-pip" style="background:${col}" title="${WB_LABELS[idx]}: ${v}${k==='stress'?' (lower=better)':''}"></div>`;
+    }).join('');
+
+    const partClass = participationClass(s.latestPart);
+    const partShort = participationShort(s.latestPart);
+    const reportBadge = s.hasCurrentReport
+      ? `<span class="badge badge-green">${fmtDate(s.latestQWk)}</span>`
+      : s.hasQData
+        ? `<span class="badge badge-red">Missing</span>`
+        : `<span class="no-data">—</span>`;
+
+    const hrs = s.minutes > 0 ? (s.minutes / 60).toFixed(1) + ' h' : '<span class="no-data">—</span>';
+    const rawComment = s.latestQ?.notes || '';
+    const safeComment = rawComment.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const safeName = a.displayName.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    return `<tr onclick="openAthlete('${a.an}')" style="cursor:pointer"
+        data-tip-name="${safeName}" data-tip-comment="${safeComment}">
+      <td class="athlete-name">${a.displayName}</td>
+      <td>${acwrBadge(s.acwr)}</td>
+      <td>${hrs}</td>
+      <td>${s.sessions > 0 ? s.sessions : '<span class="no-data">—</span>'}</td>
+      <td><div class="wb-row">${wbPips}</div></td>
+      <td><span class="${partClass}">${partShort}</span></td>
+      <td>${reportBadge}</td>
+    </tr>`;
+  }).join('');
+}
+
+function sortTable(key) {
+  if (sortKey === key) sortDir *= -1;
+  else { sortKey = key; sortDir = 1; }
+  renderTeam();
+}
+
+function openAthlete(an) {
+  document.getElementById('athlete-select').value = an;
+  renderIndividual(an);
+  showTab('individual', document.querySelectorAll('nav button')[1]);
+}
+
+// ============================================================
+//  INDIVIDUAL CHARTS (instances stored for updates)
+// ============================================================
+
+let charts = {};
+let chartMode = 'all';
+let hoursMode = 'week';
+let loadMetric = 'meps'; // 'meps' | 'hours'
+let _weekLabels = [];
+let _hrWeekData = [];
+let _indHours = { curMinutes: 0, curSessions: 0, avgMinutes: 0, weeksWithData: 0 };
+
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function showChartEmpty(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  const empty  = document.getElementById(canvasId + '-empty');
+  if (canvas) canvas.style.display = 'none';
+  if (empty)  empty.style.display  = 'block';
+}
+
+function showChart(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  const empty  = document.getElementById(canvasId + '-empty');
+  if (canvas) canvas.style.display = '';
+  if (empty)  empty.style.display  = 'none';
+}
+
+function aggregateZones(data, n) {
+  const zones = { grey:0, blue:0, green:0, yellow:0, red:0 };
+  for (const w of data.slice(-n)) {
+    if (!w) continue;
+    for (const z of Object.keys(zones)) zones[z] += w.mepsByZone?.[z] || 0;
+  }
+  return zones;
+}
+
+function aggregateTypeMinutes(data, n) {
+  const result = {};
+  for (const w of data.slice(-n)) {
+    if (!w) continue;
+    for (const [type, mins] of Object.entries(w.minutesByType || {})) {
+      result[type] = (result[type] || 0) + mins;
+    }
+  }
+  return result;
+}
+
+function setChartMode(mode, btn) {
+  chartMode = mode;
+  document.querySelectorAll('.chart-toggle-bar .chart-toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  makeLoadChart(_weekLabels, _hrWeekData, mode);
+  let typeData, typeMode;
+  if (mode === 'avg') {
+    const weeksWithData = _hrWeekData.filter(w => w && (w.minutes || 0) > 0).length || 1;
+    const raw = aggregateTypeMinutes(_hrWeekData, _hrWeekData.length);
+    typeData = Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, v / weeksWithData]));
+    typeMode = 'avg';
+  } else {
+    typeData = mode === 'month' ? aggregateTypeMinutes(_hrWeekData, 8)
+             : mode === 'prev'  ? aggregateTypeMinutes(_hrWeekData.slice(0, -1), 1)
+             :                   aggregateTypeMinutes(_hrWeekData, 1);
+    typeMode = 'week';
+  }
+  if (Object.keys(typeData).length) {
+    showChart('chart-types');
+    makeTypeChart(typeData, typeMode);
+  } else {
+    destroyChart('types');
+    showChartEmpty('chart-types');
+  }
+}
+
+function setHoursMode(mode) {
+  hoursMode = mode;
+  document.getElementById('hours-btn-week')?.classList.toggle('active', mode === 'week');
+  document.getElementById('hours-btn-avg')?.classList.toggle('active', mode === 'avg');
+  const valEl = document.getElementById('ind-hours-value');
+  const subEl = document.getElementById('ind-hours-sub');
+  if (!valEl) return;
+  if (mode === 'week') {
+    valEl.textContent = _indHours.curMinutes > 0 ? (_indHours.curMinutes / 60).toFixed(1) + ' hrs' : '—';
+    subEl.textContent = _indHours.curSessions + ' session' + (_indHours.curSessions !== 1 ? 's' : '');
+  } else {
+    valEl.textContent = _indHours.avgMinutes > 0 ? (_indHours.avgMinutes / 60).toFixed(1) + ' hrs' : '—';
+    subEl.textContent = 'avg over ' + _indHours.weeksWithData + ' wk' + (_indHours.weeksWithData !== 1 ? 's' : '');
+  }
+}
+
+function makeLoadChart(labels, weekData, mode = 'week') {
+  destroyChart('load');
+  document.getElementById('load-week-info').style.display = 'none';
+  const ctx = document.getElementById('chart-load').getContext('2d');
+  const zoneLegend = document.getElementById('zone-legend');
+  const hint = document.getElementById('load-chart-hint');
+
+  if (mode === 'week' || mode === 'prev' || mode === 'month') {
+    const slicedLabels = mode === 'prev' ? labels.slice(-2, -1)
+                       : mode === 'week'  ? labels.slice(-1)
+                       :                   labels.slice(-8);
+    const slicedData   = mode === 'prev' ? weekData.slice(-2, -1)
+                       : mode === 'week'  ? weekData.slice(-1)
+                       :                   weekData.slice(-8);
+
+    const onClick = (event, elements) => {
+      if (!elements.length) return;
+      const i = elements[0].index;
+      const w = slicedData[i];
+      const hrs  = w?.minutes ? (w.minutes / 60).toFixed(1) : '0';
+      const meps = w?.meps    ? w.meps.toLocaleString()     : '0';
+      document.getElementById('load-week-label').textContent = slicedLabels[i];
+      document.getElementById('load-week-hours').textContent = `${hrs} hrs trained`;
+      document.getElementById('load-week-meps').textContent  = `${meps} MEPs`;
+      document.getElementById('load-week-info').style.display = 'block';
+    };
+
+    if (loadMetric === 'hours') {
+      hint.style.display = '';
+      zoneLegend.style.display = 'none';
+      charts.load = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: slicedLabels,
+          datasets: [{ label: 'Hours', data: slicedData.map(w => w?.minutes ? parseFloat((w.minutes / 60).toFixed(2)) : 0),
+                       backgroundColor: '#e63946', borderRadius: 3 }],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false } },
+            y: { beginAtZero: true, title: { display: true, text: 'Hours' } },
+          },
+          onClick,
+        },
+      });
+    } else {
+      hint.style.display = '';
+      zoneLegend.style.display = 'flex';
+      const zones = ['grey','blue','green','yellow','red'];
+      charts.load = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: slicedLabels,
+          datasets: zones.map(z => ({
+            label: z.charAt(0).toUpperCase() + z.slice(1),
+            data: slicedData.map(w => w?.mepsByZone?.[z] || 0),
+            backgroundColor: ZONE_COLORS[z],
+            stack: 'meps',
+          })),
+        },
+        options: {
+          responsive: true, maintainAspectRatio: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { stacked: true, grid: { display: false } },
+            y: { stacked: true, beginAtZero: true, title: { display: true, text: 'MEPs' } },
+          },
+          onClick,
+        },
+      });
+    }
+  } else {
+    // avg mode
+    hint.style.display = 'none';
+    zoneLegend.style.display = 'none';
+
+    if (loadMetric === 'hours') {
+      const validWeeks = weekData.slice(0, -1).filter(w => w && w.minutes > 0);
+      const avgHrs = validWeeks.length
+        ? parseFloat((validWeeks.reduce((s, w) => s + w.minutes, 0) / validWeeks.length / 60).toFixed(2)) : 0;
+      charts.load = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Avg / Week'],
+          datasets: [{ label: 'Hours', data: [avgHrs], backgroundColor: '#e63946', borderRadius: 3 }],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false } },
+            y: { beginAtZero: true, title: { display: true, text: 'Hours' } },
+          },
+        },
+      });
+    } else {
+      const zoneTotals = aggregateZones(weekData, weekData.length);
+      const zones = ['grey','blue','green','yellow','red'];
+      const zoneLabels = ['Grey 50–59%','Blue 60–69%','Green 70–79%','Yellow 80–89%','Red 90–100%'];
+      charts.load = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: zoneLabels,
+          datasets: [{ data: zones.map(z => zoneTotals[z]), backgroundColor: zones.map(z => ZONE_COLORS[z]), borderWidth: 1 }],
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'right', labels: { font: { size: 11 }, boxWidth: 12 } } },
+        },
+      });
+    }
+  }
+}
+
+function setLoadMetric(metric, btn) {
+  loadMetric = metric;
+  document.getElementById('metric-btn-meps').classList.toggle('active',  metric === 'meps');
+  document.getElementById('metric-btn-hours').classList.toggle('active', metric === 'hours');
+  makeLoadChart(_weekLabels, _hrWeekData, chartMode);
+}
+
+function makeACWRChart(labels, acwrVals, hoursVals) {
+  destroyChart('acwr');
+  const ctx = document.getElementById('chart-acwr').getContext('2d');
+  charts.acwr = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          type: 'line',
+          label: 'ACWR',
+          data: acwrVals,
+          borderColor: '#CC0000',
+          backgroundColor: 'rgba(204,0,0,.1)',
+          pointBackgroundColor: acwrVals.map(acwrColor),
+          pointRadius: 5,
+          tension: 0.3,
+          fill: true,
+          spanGaps: true,
+          yAxisID: 'y',
+          order: 1,
+        },
+        {
+          type: 'bar',
+          label: 'Volume (hrs)',
+          data: hoursVals,
+          backgroundColor: 'rgba(59,130,246,0.35)',
+          borderColor: 'rgba(59,130,246,0.7)',
+          borderWidth: 1,
+          borderRadius: 3,
+          yAxisID: 'y1',
+          order: 2,
+        },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: { display: true, labels: { boxWidth: 12, font: { size: 11 } } },
+        annotation: {},
+      },
+      scales: {
+        y: {
+          beginAtZero: true, max: 2.2,
+          title: { display: true, text: 'ACWR' },
+          position: 'left',
+        },
+        y1: {
+          beginAtZero: true,
+          title: { display: true, text: 'Volume (hrs)' },
+          position: 'right',
+          grid: { drawOnChartArea: false },
+        },
+        x: { grid: { display: false } },
+      },
+    },
+  });
+}
+
+function makeTypeChart(typeMinutes, mode = 'all') {
+  destroyChart('types');
+  const ctx = document.getElementById('chart-types').getContext('2d');
+  const entries = Object.entries(typeMinutes).sort((a,b) => b[1] - a[1]);
+  const palette = ['#e63946','#3498db','#2ecc71','#f1c40f','#9b59b6','#e67e22','#1abc9c','#e91e63','#795548','#607d8b'];
+
+  if (mode === 'all' || mode === 'avg') {
+    // Horizontal bar — aggregate or per-week average
+    const axisLabel = mode === 'avg' ? 'Avg hrs / wk' : 'Hours';
+    charts.types = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: entries.map(e => e[0]),
+        datasets: [{
+          label: axisLabel,
+          data: entries.map(e => parseFloat((e[1] / 60).toFixed(2))),
+          backgroundColor: entries.map((_, i) => palette[i % palette.length]),
+          borderRadius: 3,
+        }],
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { beginAtZero: true, title: { display: true, text: axisLabel } },
+          y: { ticks: { font: { size: 11 } } },
+        },
+      },
+    });
+  } else {
+    // Donut — last 4 weeks or this week
+    charts.types = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: entries.map(e => e[0]),
+        datasets: [{ data: entries.map(e => parseFloat((e[1] / 60).toFixed(2))), backgroundColor: entries.map((_, i) => palette[i % palette.length]), borderWidth: 1 }],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'right', labels: { font: { size: 11 }, boxWidth: 12 } },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.toFixed(1)} hrs` } },
+        },
+      },
+    });
+  }
+}
+
+function makeRadarChart(wb) {
+  destroyChart('radar');
+  const ctx = document.getElementById('chart-radar').getContext('2d');
+  const vals = WB_KEYS.map(k => wb[k] ?? null);
+  charts.radar = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: WB_LABELS,
+      datasets: [{
+        label: 'Latest week',
+        data: vals,
+        backgroundColor: 'rgba(230,57,70,.15)',
+        borderColor: '#e63946',
+        pointBackgroundColor: '#e63946',
+        pointRadius: 4,
+      }],
+    },
+    options: {
+      responsive: true,
+      scales: {
+        r: {
+          min: 0, max: 5, ticks: { stepSize: 1, font: { size: 9 }, color: '#6b7280' },
+          pointLabels: { font: { size: 10 } },
+        },
+      },
+      plugins: { legend: { display: false } },
+    },
+  });
+}
+
+function makeWBTrendChart(labels, wbByWeek) {
+  destroyChart('wbtrend');
+  const ctx = document.getElementById('chart-wb-trend').getContext('2d');
+  charts.wbtrend = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: WB_KEYS.map((k, i) => ({
+        label: WB_LABELS[i],
+        data: wbByWeek.map(wb => wb?.[k] ?? null),
+        borderColor: WB_COLORS[i],
+        backgroundColor: 'transparent',
+        pointRadius: 3,
+        tension: 0.3,
+        spanGaps: true,
+        borderDash: k === 'stress' ? [4, 2] : [],
+      })),
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { min: 0, max: 5.2, ticks: { stepSize: 1 } },
+        x: { grid: { display: false } },
+      },
+    },
+  });
+
+  // Build filter chips
+  const container = document.getElementById('wb-filters');
+  container.innerHTML = WB_KEYS.map((k, i) => `
+    <button class="wb-chip ${k === 'stress' ? 'stress' : 'positive'} active"
+            data-idx="${i}"
+            style="border-color:${WB_COLORS[i]};color:${WB_COLORS[i]}"
+            onclick="toggleWBMetric(this, ${i})">
+      ${WB_LABELS[i]}
+    </button>`).join('');
+}
+
+function toggleWBMetric(btn, idx) {
+  const isActive = btn.classList.toggle('active');
+  charts.wbtrend.setDatasetVisibility(idx, isActive);
+  charts.wbtrend.update();
+}
+
+// ============================================================
+//  INDIVIDUAL VIEW RENDERER
+// ============================================================
+
+function renderIndividual(an) {
+  if (!an || !ATHLETES[an]) return;
+  const a = ATHLETES[an];
+  const s = getDisplayStats(a);
+
+  // Build the week window: trailing CONFIG.TREND_WEEKS ending on current week by default,
+  // or the full set of weeks covered by the active date filter.
+  let wkKeys;
+  if (isFilterActive()) {
+    const startD = FILTER_START || EARLIEST_WEEK || a.currentWk;
+    const endD   = FILTER_END   || a.currentWk;
+    wkKeys = weekRangeKeys(startD, endD);
+  } else {
+    const weeks = CONFIG.TREND_WEEKS;
+    wkKeys = [];
+    for (let w = weeks - 1; w >= 0; w--) wkKeys.push(addWeeks(a.currentWk, -w));
+  }
+
+  const weekLabels = [];
+  const hrWeekData = [];
+  const acwrData   = [];
+  const qWeekData  = [];
+  for (const wk of wkKeys) {
+    weekLabels.push(fmtDate(wk));
+    const hr         = a.weeks[wk]?.hr || null;
+    const missedLoad = calcMissedLoad(a.weeks[wk]?.q?.missed || []);
+    hrWeekData.push(mergeWithMissed(hr, missedLoad));
+    acwrData.push(a.weeks[wk]?.acwr ?? null);
+    qWeekData.push(a.weeks[wk]?.q?.wellbeing || null);
+  }
+
+  // Stats row
+  const latestQ = s.latestQ;
+  const partCls = participationClass(s.latestPart);
+
+  // Compute avg hours from the trend window, excluding the current (incomplete) week
+  const weeksWithData = hrWeekData.slice(0, -1).filter(w => w && w.minutes > 0);
+  const avgMinutes = weeksWithData.length
+    ? weeksWithData.reduce((s, w) => s + w.minutes, 0) / weeksWithData.length : 0;
+  hoursMode = 'week';
+  const mergedCurMinutes = hrWeekData[hrWeekData.length - 1]?.minutes ?? 0;
+  _indHours = { curMinutes: mergedCurMinutes, curSessions: s.sessions, avgMinutes, weeksWithData: weeksWithData.length };
+
+  document.getElementById('ind-stats').innerHTML = `
+    <div class="stat-card">
+      <div class="label" style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+        <span>Training Time</span>
+        <span style="display:flex;gap:3px;flex-shrink:0">
+          <button id="hours-btn-week" class="chart-toggle-btn active" onclick="setHoursMode('week')" style="padding:2px 8px;font-size:10px;border-radius:12px">This Wk</button>
+          <button id="hours-btn-avg"  class="chart-toggle-btn"        onclick="setHoursMode('avg')"  style="padding:2px 8px;font-size:10px;border-radius:12px">Avg/Wk</button>
+        </span>
+      </div>
+      <div class="value" id="ind-hours-value">${s.minutes > 0 ? (s.minutes / 60).toFixed(1) + ' hrs' : '—'}</div>
+      <div class="sub"   id="ind-hours-sub">${s.sessions} session${s.sessions !== 1?'s':''}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">ACWR</div>
+      <div class="value" style="color:${acwrColor(s.acwr)}">${s.acwr != null ? s.acwr.toFixed(2) : '—'}</div>
+      <div class="sub">acute : chronic</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Last Report</div>
+      <div class="value" style="font-size:18px">${s.latestQWk ? fmtDate(s.latestQWk) : '—'}</div>
+      <div class="sub">${s.hasCurrentReport ? (isFilterActive() ? 'Reported in range' : 'Up to date') : (isFilterActive() ? 'No report in range' : 'Missing this week')}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Participation</div>
+      <div class="value ${partCls}" style="font-size:15px;line-height:1.3">${participationShort(s.latestPart) || '—'}</div>
+      <div class="sub">${s.hasFlag ? 'Injury/illness flag' : ''}&nbsp;</div>
+    </div>
+  `;
+
+  // Show share button (coach view only, not in demo mode)
+  if (!ATHLETE_PARAM && !DEMO_MODE) document.getElementById('share-btn').style.display = '';
+
+  // Load chart
+  // Store for toggle re-renders
+  _weekLabels = weekLabels;
+  _hrWeekData = hrWeekData;
+  chartMode = 'month';
+  loadMetric = 'meps';
+  document.querySelectorAll('.chart-toggle-bar .chart-toggle-btn').forEach((b, i) => b.classList.toggle('active', i === 1));
+  document.getElementById('metric-btn-meps').classList.add('active');
+  document.getElementById('metric-btn-hours').classList.remove('active');
+
+  makeLoadChart(weekLabels, hrWeekData, 'month');
+
+  // ACWR chart
+  const hoursData = hrWeekData.map(w => w && w.minutes > 0 ? parseFloat((w.minutes / 60).toFixed(2)) : null);
+  makeACWRChart(weekLabels, acwrData, hoursData);
+
+  // Session type — default this week
+  const typeMinutes = aggregateTypeMinutes(hrWeekData, 1);
+  if (Object.keys(typeMinutes).length) {
+    showChart('chart-types');
+    makeTypeChart(typeMinutes, 'week');
+  } else {
+    destroyChart('types');
+    showChartEmpty('chart-types');
+  }
+
+  // Wellbeing radar (latest)
+  if (latestQ?.wellbeing && WB_KEYS.some(k => latestQ.wellbeing[k] != null)) {
+    showChart('chart-radar');
+    makeRadarChart(latestQ.wellbeing);
+  } else {
+    destroyChart('radar');
+    showChartEmpty('chart-radar');
+  }
+
+  // Wellbeing trend
+  makeWBTrendChart(weekLabels, qWeekData);
+
+  // Health section
+  const healthCard = document.getElementById('ind-health');
+  if (latestQ) {
+    healthCard.innerHTML = `<h3>Health &amp; Participation</h3>
+      <div class="detail-row"><span class="dl">Participation</span><span class="dv">${latestQ.participation || '—'}</span></div>
+      <div class="detail-row"><span class="dl">Training modification</span><span class="dv">${latestQ.mod || '—'}</span></div>
+      <div class="detail-row"><span class="dl">Performance affected</span><span class="dv">${latestQ.perf || '—'}</span></div>
+      <div class="detail-row"><span class="dl">Pain / symptoms</span><span class="dv">${latestQ.pain || '—'}</span></div>
+      ${latestQ.injWhen ? `<div class="detail-row"><span class="dl">Injury occurred</span><span class="dv">${latestQ.injWhen}</span></div>` : ''}
+    `;
+  } else {
+    healthCard.innerHTML = '<h3>Health &amp; Participation</h3><p class="empty-state">No data</p>';
+  }
+
+  // Missed workouts
+  const missedCard = document.getElementById('ind-missed');
+  const missed = latestQ?.missed || [];
+  if (missed.length) {
+    const rows = missed.map(m => `
+      <tr>
+        <td>${m.type}</td>
+        <td>${m.duration > 0 ? m.duration + ' hr' : '—'}</td>
+        <td>${m.rpe != null ? m.rpe : '—'}</td>
+      </tr>`).join('');
+    missedCard.innerHTML = `<h3>Unreported Workouts</h3>
+      <table class="missed-table">
+        <thead><tr><th>Type</th><th>Duration</th><th>RPE</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  } else {
+    missedCard.innerHTML = '<h3>Unreported Workouts</h3><p class="empty-state">None reported</p>';
+  }
+
+  // Notes
+  const notesCard = document.getElementById('ind-notes');
+  const notes = latestQ?.notes;
+  notesCard.innerHTML = `<h3>Latest Notes (${s.latestQWk ? fmtDate(s.latestQWk) : '—'})</h3>
+    ${notes ? `<div class="notes-text">${notes}</div>` : '<p class="empty-state">No notes submitted</p>'}`;
+}
+
+// ============================================================
+//  TAB NAVIGATION
+// ============================================================
+
+function showTab(name, btn) {
+  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ============================================================
+//  MAIN LOAD
+// ============================================================
+
+async function loadData() {
+  document.getElementById('loading').style.display = 'flex';
+  document.getElementById('error-banner').style.display = 'none';
+  document.getElementById('loading-msg').textContent = 'Loading HR data…';
+
+  try {
+    if (!CONFIG.HR_CSV_URL || CONFIG.HR_CSV_URL === 'YOUR_HR_CSV_URL_HERE') {
+      throw new Error('HR_CSV_URL is not set in config.js');
+    }
+    if (!CONFIG.QUESTIONNAIRE_URL || CONFIG.QUESTIONNAIRE_URL === 'YOUR_GOOGLE_SHEETS_CSV_URL_HERE') {
+      throw new Error('QUESTIONNAIRE_URL is not set in config.js');
+    }
+
+    const [hrRows, qRows] = await Promise.all([
+      fetchCSV(CONFIG.HR_CSV_URL, 'HR CSV (Google Sheets)'),
+      fetchCSV(CONFIG.QUESTIONNAIRE_URL, 'Questionnaire (Google Sheets)'),
+    ]);
+
+    document.getElementById('loading-msg').textContent = 'Processing…';
+
+    HR_DATA = processHR(hrRows);
+    Q_DATA  = processQuestionnaire(qRows);
+    ATHLETES = buildProfiles();
+    if (DEMO_MODE) anonymizeAthletes();
+
+    EARLIEST_WEEK = Object.values(ATHLETES).reduce((min, a) => {
+      if (!a.weekList.length) return min;
+      return (!min || a.weekList[0] < min) ? a.weekList[0] : min;
+    }, null);
+    updateFilterStatus();
+    updateTeamTableHeaders();
+    updateCmpWindowToggleState();
+
+    // Populate compare tab
+    initCmpChips();
+    renderCompare();
+
+    // Populate athlete selector
+    const sel = document.getElementById('athlete-select');
+    sel.innerHTML = '<option value="">— Select an athlete —</option>' +
+      Object.values(ATHLETES)
+        .sort((a,b) => a.displayName.localeCompare(b.displayName))
+        .map(a => `<option value="${a.an}">${a.displayName}</option>`)
+        .join('');
+
+    if (ATHLETE_PARAM) {
+      const an = resolveAlias(normalizeName(ATHLETE_PARAM));
+      document.querySelector('nav').style.display = 'none';
+      document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+      document.getElementById('tab-individual').classList.add('active');
+      document.getElementById('athlete-select').closest('.athlete-selector').style.display = 'none';
+      if (ATHLETES[an]) {
+        renderIndividual(an);
+      } else {
+        document.getElementById('ind-stats').innerHTML =
+          `<p style="color:var(--muted);padding:40px 0">Athlete not found. Check the link and try again.</p>`;
+      }
+    } else {
+      renderTeam();
+    }
+
+    document.getElementById('last-updated').textContent =
+      'Last updated: ' + new Date().toLocaleTimeString();
+
+  } catch (err) {
+    const banner = document.getElementById('error-banner');
+    banner.style.display = 'block';
+    banner.textContent = 'Error loading data: ' + err.message;
+    console.error(err);
+  } finally {
+    document.getElementById('loading').style.display = 'none';
+  }
+}
+
+function refreshData() { loadData(); }
+
+// ============================================================
+//  COPY ATHLETE LINK
+// ============================================================
+
+function copyAthleteLink() {
+  const an = document.getElementById('athlete-select').value;
+  if (!an) return;
+  const url = window.location.origin + window.location.pathname + '?athlete=' + encodeURIComponent(an);
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('share-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy Athlete Link', 2000);
+  });
+}
+
+// ============================================================
+//  INJURY REPORT MODAL
+// ============================================================
+
+function showInjuryReport() {
+  const statsList = Object.values(ATHLETES).map(a => ({ a, s: getDisplayStats(a) }));
+  const flagged   = statsList.filter(({ s }) => s.hasFlag && s.hasCurrentReport);
+  const modal     = document.getElementById('injury-modal');
+  const body      = document.getElementById('injury-modal-body');
+  const title     = document.getElementById('injury-modal-title');
+
+  if (isFilterActive()) {
+    const startLbl = FILTER_START ? fmtDate(getMondayOfWeek(FILTER_START)) : 'earliest data';
+    const endLbl   = FILTER_END   ? fmtDate(getMondayOfWeek(FILTER_END))   : 'latest data';
+    title.textContent = `Injury Report — ${startLbl} – ${endLbl}`;
+  } else {
+    const currentWk = getMondayOfWeek(today());
+    title.textContent = `Injury Report — Week of ${fmtDate(currentWk)}`;
+  }
+
+  if (!flagged.length) {
+    body.innerHTML = `<p class="modal-empty">No injury flags reported ${isFilterActive() ? 'in this range' : 'this week'}.</p>`;
+  } else {
+    body.innerHTML = flagged
+      .sort((x, y) => x.a.displayName.localeCompare(y.a.displayName))
+      .map(({ a, s }) => {
+        const q = s.latestQ;
+        const row = (label, val) => val
+          ? `<div class="inj-row"><span class="inj-label">${label}</span><span class="inj-value">${val}</span></div>`
+          : '';
+        return `
+          <div class="inj-athlete">
+            <div class="inj-athlete-name">
+              ${a.displayName}
+              <span class="badge badge-${s.latestPart.toLowerCase().includes('reduced') ? 'red' : 'yellow'}">${participationShort(s.latestPart)}</span>
+            </div>
+            ${row('Training modification', q?.mod)}
+            ${row('Performance affected', q?.perf)}
+            ${row('Pain / symptoms', q?.pain)}
+            ${row('Injury occurred', q?.injWhen)}
+            ${row('Notes', q?.notes)}
+          </div>`;
+      }).join('');
+  }
+
+  modal.classList.add('open');
+}
+
+function closeInjuryModal(event) {
+  // Close when clicking the overlay background, close button, or called directly
+  if (event && event.target !== document.getElementById('injury-modal')) return;
+  document.getElementById('injury-modal').classList.remove('open');
+}
+
+// Auto-refresh
+if (CONFIG.REFRESH_MINUTES > 0) {
+  setInterval(loadData, CONFIG.REFRESH_MINUTES * 60 * 1000);
+}
+
+if (DEMO_MODE) document.getElementById('demo-banner').style.display = 'block';
+loadData();
+
+// ============================================================
+//  ROW COMMENT TOOLTIP
+// ============================================================
+
+const _rowTip = document.getElementById('row-tooltip');
+
+document.getElementById('team-tbody').addEventListener('mouseover', function(evt) {
+  const row = evt.target.closest('tr[data-tip-comment]');
+  if (!row || !row.dataset.tipComment) return;
+  _rowTip.innerHTML = `<div class="tip-name">${row.dataset.tipName}</div>${row.dataset.tipComment}`;
+  _rowTip.style.display = 'block';
+});
+
+document.getElementById('team-tbody').addEventListener('mousemove', function(evt) {
+  if (_rowTip.style.display === 'none') return;
+  const pad = 16;
+  let x = evt.clientX + pad, y = evt.clientY + pad;
+  if (x + _rowTip.offsetWidth  > window.innerWidth  - pad) x = evt.clientX - _rowTip.offsetWidth  - pad;
+  if (y + _rowTip.offsetHeight > window.innerHeight - pad) y = evt.clientY - _rowTip.offsetHeight - pad;
+  _rowTip.style.left = x + 'px';
+  _rowTip.style.top  = y + 'px';
+});
+
+document.getElementById('team-tbody').addEventListener('mouseout', function(evt) {
+  if (!evt.relatedTarget || !evt.relatedTarget.closest('#team-tbody')) {
+    _rowTip.style.display = 'none';
+  }
+});
+
+// ============================================================
+//  COMPARE TAB
+// ============================================================
+
+const CMP_COLORS = [
+  '#e63946','#3498db','#2ecc71','#f1c40f','#9b59b6',
+  '#e67e22','#1abc9c','#e91e63','#00bcd4','#ff5722','#8bc34a',
+];
+
+let cmpWindow  = 4;
+let cmpMetric  = 'meps';
+let cmpCharts  = {};
+let cmpSelected = new Set();
+let _cmpWeekLabels  = [];
+let _cmpAthleteData = [];
+
+function initCmpChips() {
+  const container = document.getElementById('cmp-athlete-chips');
+  const list = Object.values(ATHLETES).sort((a, b) => a.displayName.localeCompare(b.displayName));
+  cmpSelected = new Set(list.map(a => a.an));
+  container.innerHTML = list.map((a, i) => {
+    const col = CMP_COLORS[i % CMP_COLORS.length];
+    return `<button class="wb-chip active" data-an="${a.an}" data-col="${col}"
+      style="border-color:${col};color:${col}"
+      onclick="toggleCmpAthlete(this)">${a.displayName}</button>`;
+  }).join('');
+}
+
+function toggleCmpAthlete(btn) {
+  const an = btn.dataset.an;
+  if (cmpSelected.has(an)) {
+    cmpSelected.delete(an);
+    btn.classList.remove('active');
+  } else {
+    cmpSelected.add(an);
+    btn.classList.add('active');
+  }
+  renderCompare();
+}
+
+function setCmpWindow(weeks, btn) {
+  cmpWindow = weeks;
+  document.querySelectorAll('#tab-compare .chart-toggle-bar .chart-toggle-btn')
+    .forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCompare();
+}
+
+function setCmpMetric(metric, btn) {
+  cmpMetric = metric;
+  document.getElementById('cmp-metric-meps').classList.toggle('active',  metric === 'meps');
+  document.getElementById('cmp-metric-hours').classList.toggle('active', metric === 'hours');
+  makeCmpLoadChart();
+}
+
+function destroyCmpChart(key) {
+  if (cmpCharts[key]) { cmpCharts[key].destroy(); delete cmpCharts[key]; }
+}
+
+function renderCompare() {
+  const sortedAthletes = Object.values(ATHLETES)
+    .sort((a, b) => a.displayName.localeCompare(b.displayName));
+  const athletes = sortedAthletes.filter(a => cmpSelected.has(a.an));
+
+  if (!athletes.length) {
+    ['load','acwr','types','radar'].forEach(k => destroyCmpChart(k));
+    return;
+  }
+
+  const currentWk = getMondayOfWeek(today());
+  let wkKeys;
+  if (isFilterActive()) {
+    const startD = FILTER_START || EARLIEST_WEEK || currentWk;
+    const endD   = FILTER_END   || currentWk;
+    wkKeys = weekRangeKeys(startD, endD);
+  } else {
+    wkKeys = [];
+    for (let w = cmpWindow - 1; w >= 0; w--) wkKeys.push(addWeeks(currentWk, -w));
+  }
+  _cmpWeekLabels = wkKeys.map(fmtDate);
+
+  // The color index must match the full sorted list so colors stay stable as athletes are toggled
+  _cmpAthleteData = athletes.map(a => {
+    const colorIdx = sortedAthletes.findIndex(s => s.an === a.an);
+    const color = CMP_COLORS[colorIdx % CMP_COLORS.length];
+    const weeks = [];
+    const acwr  = [];
+    for (const wk of wkKeys) {
+      const hr = a.weeks[wk]?.hr || null;
+      const missedLoad = calcMissedLoad(a.weeks[wk]?.q?.missed || []);
+      weeks.push(mergeWithMissed(hr, missedLoad));
+      acwr.push(a.weeks[wk]?.acwr ?? null);
+    }
+    return { a, color, weeks, acwr };
+  });
+
+  makeCmpLoadChart();
+  makeCmpACWRChart();
+  makeCmpTypeChart();
+  makeCmpRadarChart();
+}
+
+function makeCmpLoadChart() {
+  destroyCmpChart('load');
+  const ctx = document.getElementById('cmp-chart-load').getContext('2d');
+  const datasets = _cmpAthleteData.map(({ a, color, weeks }) => ({
+    label: a.displayName,
+    data: weeks.map(w => {
+      if (!w) return null;
+      return cmpMetric === 'hours'
+        ? (w.minutes > 0 ? parseFloat((w.minutes / 60).toFixed(2)) : null)
+        : (w.meps > 0 ? w.meps : null);
+    }),
+    borderColor: color,
+    backgroundColor: color + '22',
+    pointBackgroundColor: color,
+    pointRadius: 4,
+    tension: 0.3,
+    fill: false,
+    spanGaps: true,
+  }));
+  cmpCharts.load = new Chart(ctx, {
+    type: 'line',
+    data: { labels: _cmpWeekLabels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { labels: { boxWidth: 12, font: { size: 11 } } } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { beginAtZero: true, title: { display: true, text: cmpMetric === 'hours' ? 'Hours' : 'MEPs' } },
+      },
+    },
+  });
+}
+
+function makeCmpACWRChart() {
+  destroyCmpChart('acwr');
+  const ctx = document.getElementById('cmp-chart-acwr').getContext('2d');
+  const datasets = _cmpAthleteData.map(({ a, color, acwr }) => ({
+    label: a.displayName,
+    data: acwr,
+    borderColor: color,
+    backgroundColor: color + '22',
+    pointBackgroundColor: color,
+    pointRadius: 4,
+    tension: 0.3,
+    fill: false,
+    spanGaps: true,
+  }));
+  cmpCharts.acwr = new Chart(ctx, {
+    type: 'line',
+    data: { labels: _cmpWeekLabels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { labels: { boxWidth: 12, font: { size: 11 } } } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { beginAtZero: true, max: 2.2, title: { display: true, text: 'ACWR' } },
+      },
+    },
+  });
+}
+
+function makeCmpTypeChart() {
+  destroyCmpChart('types');
+  const allTypes = new Set();
+  const athleteTypeMins = _cmpAthleteData.map(({ weeks }) => {
+    const mins = {};
+    for (const w of weeks) {
+      if (!w) continue;
+      for (const [t, m] of Object.entries(w.minutesByType || {})) {
+        mins[t] = (mins[t] || 0) + m;
+        allTypes.add(t);
+      }
+    }
+    return mins;
+  });
+
+  const emptyEl = document.getElementById('cmp-types-empty');
+  const canvas  = document.getElementById('cmp-chart-types');
+  if (!allTypes.size) {
+    canvas.style.display = 'none'; emptyEl.style.display = 'block'; return;
+  }
+  canvas.style.display = ''; emptyEl.style.display = 'none';
+
+  const types = [...allTypes].sort();
+  const ctx = canvas.getContext('2d');
+  const datasets = _cmpAthleteData.map(({ a, color }, i) => ({
+    label: a.displayName,
+    data: types.map(t => parseFloat(((athleteTypeMins[i][t] || 0) / 60).toFixed(2))),
+    backgroundColor: color + 'cc',
+    borderColor: color,
+    borderWidth: 1,
+    borderRadius: 3,
+  }));
+  cmpCharts.types = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: types, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { labels: { boxWidth: 12, font: { size: 11 } } } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { beginAtZero: true, title: { display: true, text: 'Hours' } },
+      },
+    },
+  });
+}
+
+function makeCmpRadarChart() {
+  destroyCmpChart('radar');
+  const emptyEl = document.getElementById('cmp-radar-empty');
+  const canvas  = document.getElementById('cmp-chart-radar');
+  const datasets = _cmpAthleteData
+    .map(({ a, color }) => ({ a, color, wb: getDisplayStats(a).latestWB }))
+    .filter(({ wb }) => wb && WB_KEYS.some(k => wb[k] != null))
+    .map(({ a, color, wb }) => ({
+      label: a.displayName,
+      data: WB_KEYS.map(k => wb[k] ?? null),
+      backgroundColor: color + '22',
+      borderColor: color,
+      pointBackgroundColor: color,
+      pointRadius: 3,
+      spanGaps: true,
+    }));
+
+  if (!datasets.length) {
+    canvas.style.display = 'none'; emptyEl.style.display = 'block'; return;
+  }
+  canvas.style.display = ''; emptyEl.style.display = 'none';
+
+  cmpCharts.radar = new Chart(canvas.getContext('2d'), {
+    type: 'radar',
+    data: { labels: WB_LABELS, datasets },
+    options: {
+      responsive: true,
+      scales: {
+        r: {
+          min: 0, max: 5,
+          ticks: { stepSize: 1, font: { size: 9 }, color: '#6b7280' },
+          pointLabels: { font: { size: 10 } },
+        },
+      },
+      plugins: { legend: { labels: { boxWidth: 12, font: { size: 11 } } } },
+    },
+  });
+}
+</script>
+</body>
+</html>
