@@ -515,12 +515,20 @@ function addWeeks(weekKey, n) {
   return d.toISOString().split('T')[0];
 }
 
-function getWeekKeyFromQ(month, dayStr) {
+function addDays(dateKey, n) {
+  const d = new Date(dateKey);
+  d.setDate(d.getDate() + n);
+  return d.toISOString().split('T')[0];
+}
+
+function getWeekKeyFromQ(month, dayStr, ts) {
   const m = MONTH_MAP[month?.toLowerCase()?.trim()];
   if (m === undefined) return null;
   const day = parseInt(dayStr);
   if (isNaN(day)) return null;
-  const now = today();
+  // The form has no year: infer it from when the report was submitted ('M/D/YYYY H:MM:SS')
+  const sub = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(ts || '');
+  const now = sub ? new Date(+sub[3], +sub[1] - 1, +sub[2]) : today();
   let year = now.getFullYear();
   if (m > now.getMonth() + 2) year--;
   // Questionnaire reports the Monday — that is the week start
@@ -812,6 +820,7 @@ function processHR(rows) {
   // Roll up to athlete × week
   const out = {}; // athleteName → { weekKey → { meps, mepsByZone, sessionTypes, count, minutes } }
   for (const s of Object.values(sessions)) {
+    if (CONFIG.SEASON_END && s.date > CONFIG.SEASON_END) continue;
     const wk = getMondayOfWeek(s.date);
     if (!wk) continue;
     if (!out[s.athlete]) out[s.athlete] = {};
@@ -864,9 +873,11 @@ function processQuestionnaire(rows) {
     const name = r[Q.NAME]?.trim();
     if (!name) continue;
     const an = resolveAlias(normalizeName(name));
-    const wk = getWeekKeyFromQ(r[Q.MONTH], r[Q.WDAY]);
-    if (!wk) continue;
     const ts = r[Q.TS] || '';
+    const wk = getWeekKeyFromQ(r[Q.MONTH], r[Q.WDAY], ts);
+    if (!wk) continue;
+    // Only reports for weeks that finished by the end of the season
+    if (CONFIG.SEASON_END && addWeeks(wk, 1) > addDays(CONFIG.SEASON_END, 1)) continue;
 
     const missed = [];
     const tryAdd = (has, type, dur, rpe) => {

@@ -1,7 +1,8 @@
 // ============================================================
 //  CONFIGURATION — 2025–26 SEASON ARCHIVE (frozen, do not edit)
-//  Dashboard, roster and data as they were on 18 Oct 2026, before
-//  the 2027 IPP roster. Git tag: season-2025-26
+//  Dashboard and roster as they were on 18 Oct 2026, before the
+//  2027 IPP roster, with training data ending at Worlds (15 Jun 2026).
+//  Git tag: season-2025-26
 // ============================================================
 
 const CONFIG = {
@@ -11,8 +12,11 @@ const CONFIG = {
   // Snapshot of the questionnaire Google Sheet (last response 12 Oct 2026)
   QUESTIONNAIRE_URL: 'questionnaire.csv',
 
+  // The season ends after Worlds (final game vs Thailand): later sessions and reports are dropped
+  SEASON_END: '2026-06-15',
+
   // The dashboard behaves as if today were this date
-  AS_OF: '2026-10-18',
+  AS_OF: '2026-06-15',
 
   // Archived data never changes
   REFRESH_MINUTES: 0,
