@@ -595,6 +595,9 @@ function normalizeFromFile(f) {
 
 function normalizeName(n) { return n?.toLowerCase().trim() || ''; }
 
+// The questionnaire is bilingual ("Yes / Oui"); keep the English half of an answer
+function englishPart(v) { return v?.split(' / ')[0].trim() || ''; }
+
 // Maps variant spellings → canonical name
 const ATHLETE_ALIASES = {
   'maryam salizadeh':  'maryam salehizadeh',
@@ -941,15 +944,15 @@ function processQuestionnaire(rows) {
     const name = r[Q.NAME]?.trim();
     if (!name) continue;
     const an = resolveAlias(normalizeName(name));
-    const wk = getWeekKeyFromQ(r[Q.MONTH], r[Q.WDAY]);
+    const wk = getWeekKeyFromQ(englishPart(r[Q.MONTH]), r[Q.WDAY]);
     if (!wk) continue;
     const ts = r[Q.TS] || '';
 
     const missed = [];
     const tryAdd = (has, type, dur, rpe) => {
-      if (has?.toLowerCase().includes('yes') && type?.trim()) {
+      if (englishPart(has).toLowerCase().includes('yes') && englishPart(type)) {
         missed.push({
-          type: type.trim(),
+          type: englishPart(type),
           duration: parseFloat(dur) || 0,
           rpe: parseScore(rpe),
         });
@@ -959,14 +962,14 @@ function processQuestionnaire(rows) {
     tryAdd(r[Q.HAS_W2], r[Q.W2T], r[Q.W2D], r[Q.W2R]);
     tryAdd(r[Q.HAS_W3], r[Q.W3T], r[Q.W3D], r[Q.W3R]);
 
-    const part = r[Q.PART]?.trim() || '';
+    const part = englishPart(r[Q.PART]);
     const entry = {
       ts, name, an, wk, missed, participation: part,
       hasFlag: part.toLowerCase().includes('with injury') || part.toLowerCase().includes('reduced'),
-      mod: r[Q.MOD]?.trim() || '',
-      perf: r[Q.PERF]?.trim() || '',
-      pain: r[Q.PAIN]?.trim() || '',
-      injWhen: r[Q.INJ_WHEN]?.trim() || '',
+      mod: englishPart(r[Q.MOD]),
+      perf: englishPart(r[Q.PERF]),
+      pain: englishPart(r[Q.PAIN]),
+      injWhen: englishPart(r[Q.INJ_WHEN]),
       wellbeing: {
         stress:        parseScore(r[Q.STRESS]),
         enjoyment:     parseScore(r[Q.ENJOY]),
