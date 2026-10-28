@@ -6,8 +6,9 @@ const CONFIG = {
   // HR data CSV auto-synced from SharePoint by sync_hr_data.py
   HR_CSV_URL: 'https://raw.githubusercontent.com/druskim/women_training_dashboard/main/hr_data.csv',
 
-  // Individual Performance Plans + roster, generated from the IPP workbook by sync_hr_data.py
-  IPP_JSON_URL: 'https://raw.githubusercontent.com/druskim/women_training_dashboard/main/ipp_data.json',
+  // Individual Performance Plans + roster, read live from the IPP workbook on Google Drive
+  // (shared as "Anyone with the link can view"). Each athlete sheet adds them to the roster.
+  IPP_XLSX_URL: 'https://docs.google.com/spreadsheets/d/1y_RA5llgTHyxk_ICyMNAp816ew44T-vJ/export?format=xlsx',
 
   // Google Sheets questionnaire (bilingual form, 2027 season). The sheet must be shared as
   // "Anyone with the link can view"; the /export URL serves it as CSV.
