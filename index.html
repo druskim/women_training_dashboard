@@ -674,10 +674,13 @@ function participationShort(p) {
 //  SESSION TYPE DECODER
 // ============================================================
 
+// Explicit "O" codes and anything we can't classify are reported together
+const OTHER_TYPE = 'Other/Uncoded';
+
 const SESSION_TYPE_MAP = {
   'W': 'Weights',
   'G': 'Goalball Practice',
-  'O': 'Other',
+  'O': OTHER_TYPE,
   'E': 'Aerobic Conditioning',
   'M': 'Stretching & Mobility',
   'H': 'High Intensity Interval Training',
@@ -692,11 +695,11 @@ function isCodePrefix(part) {
   return part.length === 1 || !/[a-zA-Z]/.test(part[1]);
 }
 
-// Keyword fallback for free-text entries that don't use letter codes
+// Keyword fallback for free-text entries that don't use letter codes.
+// "Workout" is deliberately absent: it's MyZone's default name, so it says nothing about the session.
 const SESSION_KEYWORDS = [
   [/^goalball\b/i,  'Goalball Practice'],
   [/^weight/i,      'Weights'],
-  [/^workout/i,     'Weights'],
   [/^recover/i,     'Recovery Workout'],
 ];
 
@@ -708,15 +711,15 @@ function keywordMatch(part) {
 }
 
 function decodeSessionType(raw) {
-  if (!raw) return 'Other';
+  if (!raw) return OTHER_TYPE;
   const trimmed = raw.trim();
   const code = trimmed.charAt(0).toUpperCase();
   if (SESSION_TYPE_MAP[code] && isCodePrefix(trimmed)) return SESSION_TYPE_MAP[code];
-  return keywordMatch(trimmed) || 'Other';
+  return keywordMatch(trimmed) || OTHER_TYPE;
 }
 
 function decodeSessionTypes(raw) {
-  if (!raw) return ['Other'];
+  if (!raw) return [OTHER_TYPE];
   // Split on common separators: "and", "&", "/", ","
   const parts = raw.split(/\s*(?:and|&|\/|,)\s*/i).map(p => p.trim()).filter(Boolean);
   const types = new Set();
@@ -725,21 +728,10 @@ function decodeSessionTypes(raw) {
     if (SESSION_TYPE_MAP[code] && isCodePrefix(part)) {
       types.add(SESSION_TYPE_MAP[code]);
     } else {
-      const kw = keywordMatch(part);
-      if (kw) {
-        types.add(kw);
-      } else {
-        // Try extracting individual known letters (e.g. "WE")
-        const letters = part.toUpperCase().split('').filter(c => SESSION_TYPE_MAP[c]);
-        if (letters.length > 1) {
-          letters.forEach(c => types.add(SESSION_TYPE_MAP[c]));
-        } else {
-          types.add('Other');
-        }
-      }
+      types.add(keywordMatch(part) || OTHER_TYPE);
     }
   }
-  return types.size ? [...types] : ['Other'];
+  return types.size ? [...types] : [OTHER_TYPE];
 }
 
 // ============================================================
