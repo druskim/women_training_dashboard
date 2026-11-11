@@ -336,6 +336,7 @@
          style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:4px;padding:5px 8px;font-size:13px;color-scheme:dark">
   <button onclick="clearDateFilter()" style="background:rgba(255,255,255,.08);border:1px solid var(--border);color:var(--text);padding:5px 12px;border-radius:4px;cursor:pointer;font-size:12px">Clear</button>
   <span id="filter-status" style="font-size:12px;color:var(--muted);margin-left:4px">Showing all data</span>
+  <span id="hr-dup-status" style="font-size:12px;color:var(--muted);margin-left:auto;cursor:help;display:none"></span>
 </div>
 
 <main>
@@ -951,11 +952,26 @@ function processHR(rows) {
 
   // Build per-session aggregates first
   const sessions = {};
+  // An athlete can only record one minute at a time, so a repeated athlete + timestamp is a
+  // duplicate export row (e.g. a session copied under an 'NA' ID or a second type label).
+  // Only exact repeats are skipped, and every skipped row is logged in HR_DUPLICATES.
+  const seenMinutes = new Map(); // athlete||timestamp → { sid, hr } of the row that was counted
+  HR_DUPLICATES = [];
   for (let i = 1; i < rows.length; i++) {
     const r = rows[i];
     if (!r[C.FILE] || !r[C.SID]) continue;
     const athlete = resolveAlias(normalizeFromFile(r[C.FILE]));
     const sid = r[C.SID];
+    if (r[C.TS]) {
+      const minuteKey = `${athlete}||${r[C.TS]}`;
+      const kept = seenMinutes.get(minuteKey);
+      if (kept) {
+        HR_DUPLICATES.push({ athlete, ts: r[C.TS], sid, type: r[C.TYPE] || '', hr: r[C.HR],
+                             keptSid: kept.sid, keptHr: kept.hr, conflict: kept.hr !== r[C.HR] });
+        continue;
+      }
+      seenMinutes.set(minuteKey, { sid, hr: r[C.HR] });
+    }
     const key = `${athlete}||${sid}`;
     if (!sessions[key]) {
       sessions[key] = {
@@ -1010,6 +1026,33 @@ function processHR(rows) {
     for (const z of ['grey','blue','green','yellow','red']) w.mepsByZone[z] += s.mepsByZone[z];
   }
   return out;
+}
+
+// Surface the rows processHR skipped so nothing disappears silently: a note in the filter bar
+// (hover for per-athlete detail) and the full row list in the browser console.
+function reportHRDuplicates() {
+  const el = document.getElementById('hr-dup-status');
+  if (!HR_DUPLICATES.length) { el.style.display = 'none'; return; }
+  const byAthleteDay = {};
+  for (const d of HR_DUPLICATES) {
+    const name = ATHLETES[d.athlete]?.displayName || capitalize(d.athlete);
+    const k = `${name} — ${fmtDate(d.ts.split('T')[0])}`;
+    byAthleteDay[k] = byAthleteDay[k] || { minutes: 0, conflicts: 0 };
+    byAthleteDay[k].minutes += 1;
+    if (d.conflict) byAthleteDay[k].conflicts += 1;
+  }
+  const conflicts = HR_DUPLICATES.filter(d => d.conflict).length;
+  el.textContent = `${HR_DUPLICATES.length} duplicate HR minute${HR_DUPLICATES.length !== 1 ? 's' : ''} not counted`
+    + (conflicts ? ` (${conflicts} with differing HR — check source)` : '');
+  el.style.color = conflicts ? 'var(--warn, #e67e22)' : 'var(--muted)';
+  el.title = 'Rows repeating an athlete-minute already counted:\n' + Object.entries(byAthleteDay)
+    .map(([k, v]) => `${k}: ${v.minutes} min` + (v.conflicts ? ` (${v.conflicts} differing HR)` : ''))
+    .join('\n');
+  el.style.display = '';
+  if (!DEMO_MODE) {
+    console.warn(`processHR skipped ${HR_DUPLICATES.length} duplicate HR rows:`);
+    console.table(HR_DUPLICATES);
+  }
 }
 
 // ============================================================
@@ -1118,6 +1161,7 @@ function calcACWR(hrWeeks, weekKey) {
 
 let ATHLETES = {};   // keyed by normalised name
 let HR_DATA = {};
+let HR_DUPLICATES = []; // HR rows skipped as repeats of an already-counted athlete-minute
 let Q_DATA  = {};
 
 let IPP_DATA = null; // parsed ipp_data.json, or null if it failed to load
@@ -2251,6 +2295,7 @@ async function loadData() {
     Q_DATA  = processQuestionnaire(qRows);
     ATHLETES = buildProfiles();
     if (DEMO_MODE) anonymizeAthletes();
+    reportHRDuplicates();
 
     EARLIEST_WEEK = Object.values(ATHLETES).reduce((min, a) => {
       if (!a.weekList.length) return min;
