@@ -27,8 +27,8 @@ from ipp_to_json import DEFAULT_XLSX, JSON_PATH as IPP_JSON_PATH, to_json_text, 
 
 SHAREPOINT_URL = (
     "https://canadiansportinstit-my.sharepoint.com/:x:/g/personal/"
-    "sportlab_csiontario_ca/IQDLcEm2AgpMRbbeO6qx9szCAUwZS3sio6QbyxiNfeD-2Cs"
-    "?e=9ga0rl"
+    "sportlab_csiontario_ca/IQB1_y2eJFB0QJlSsO97QZpTASzsNL1Ex3Lxyld7EYEvsHU"
+    "?e=cKQ4A5"
 )
 
 # IPP workbook: paste its SharePoint "anyone with the link" URL here once it's shared.
