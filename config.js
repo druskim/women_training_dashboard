@@ -10,6 +10,11 @@ const CONFIG = {
   // (shared as "Anyone with the link can view"). Each athlete sheet adds them to the roster.
   IPP_XLSX_URL: 'https://docs.google.com/spreadsheets/d/1y_RA5llgTHyxk_ICyMNAp816ew44T-vJ/export?format=xlsx',
 
+  // 2026–27 Yearly Training Plan (Google Sheet shared as "Anyone with the link can view").
+  // Its "Meso YTP" tab gives each week's training phase and planned volume; weeks without a
+  // planned volume get an estimate that follows the YTP's own ±5% progression rule.
+  YTP_XLSX_URL: 'https://docs.google.com/spreadsheets/d/1hAswQizlsnej4QbZJCdYr4ate9qlpKfMZlJ9A3WnYGg/export?format=xlsx',
+
   // Google Sheets questionnaire (bilingual form, 2027 season). The sheet must be shared as
   // "Anyone with the link can view"; the /export URL serves it as CSV.
   QUESTIONNAIRE_URL: 'https://docs.google.com/spreadsheets/d/1q8rNVDC8VhzugMs-fhZYVQiH7d5a7hEYGwWa1rw7gxQ/export?format=csv',

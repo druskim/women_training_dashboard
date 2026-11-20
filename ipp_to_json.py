@@ -25,8 +25,20 @@ TEMPLATE_SHEET = "Template"
 DEFAULT_XLSX   = "IPP_DTE_Accountability_IST.xlsx"
 JSON_PATH      = "ipp_data.json"
 
-# IST practitioner blocks: first row of each 2-row block
-IST_BLOCK_ROWS = [39, 41, 43]
+# Lower sections are found by their column-A heading, so a sheet with rows added or deleted
+# still reads correctly. The row numbers are the Template layout, used if a heading is missing.
+IST_HEADER = ("DISCIPLINE / PRACTITIONER", 38)  # 3 two-row practitioner blocks follow
+IST_NOTES  = ("IST INTEGRATION NOTES", 45)      # notes box is the next row
+COMMITMENT = ("ATHLETE COMMITMENT", 47)         # names/dates 2 rows below
+
+
+def _find_row(ws, text):
+    """Row of the first column-A cell starting with `text` (case-insensitive), or None."""
+    for r in range(1, 101):
+        v = _clean(ws[f"A{r}"].value)
+        if isinstance(v, str) and v.upper().startswith(text):
+            return r
+    return None
 
 
 def _clean(v):
@@ -54,6 +66,14 @@ def _parse_sheet(ws, tpl) -> dict:
         # Row labels come from the athlete's sheet, falling back to the template
         return _clean(ws[coord].value) or _clean(tpl[coord].value)
 
+    def raw(coord):
+        # Free-text cells that are blank on the Template: read as-is, no Template comparison
+        return _clean(ws[coord].value)
+
+    ist_start  = (_find_row(ws, IST_HEADER[0]) or IST_HEADER[1]) + 1
+    notes_row  = _find_row(ws, IST_NOTES[0])  # None if the section was deleted
+    commit_row = (_find_row(ws, COMMITMENT[0]) or COMMITMENT[1]) + 2
+
     def assessment(label_col, rating_col, priority_col):
         return [{"component": label(f"{label_col}{r}"),
                  "rating":    val(f"{rating_col}{r}"),
@@ -62,11 +82,11 @@ def _parse_sheet(ws, tpl) -> dict:
 
     plan = {
         "header": {
-            "athlete":       val("B6"),
-            "position":      val("E6"),
-            "trainingBlock": val("G6"),
-            "dateCompleted": val("J6"),
-            "nextReview":    val("L6"),
+            "athlete":       raw("B6"),
+            "position":      raw("E6"),
+            "trainingBlock": raw("G6"),
+            "dateCompleted": raw("J6"),
+            "nextReview":    raw("L6"),
         },
         "offensive": assessment("A", "E", "F"),
         "defensive": assessment("G", "K", "L"),
@@ -89,19 +109,19 @@ def _parse_sheet(ws, tpl) -> dict:
         "coachFeedback":       val("A32"),
         "ist": [{
             "discipline": label(f"A{start}"),
-            "items": [{"focus":    val(f"C{r}"),
-                       "actions":  val(f"F{r}"),
-                       "measure":  val(f"I{r}"),
-                       "links":    val(f"K{r}"),
-                       "status":   val(f"L{r}")}
+            "items": [{"focus":    raw(f"C{r}"),
+                       "actions":  raw(f"F{r}"),
+                       "measure":  raw(f"I{r}"),
+                       "links":    raw(f"K{r}"),
+                       "status":   val(f"L{r}")}  # a "Status" placeholder may sit here on the Template
                       for r in (start, start + 1)],
-        } for start in IST_BLOCK_ROWS],
-        "istNotes": val("A46"),
+        } for start in (ist_start, ist_start + 2, ist_start + 4)],
+        "istNotes": raw(f"A{notes_row + 1}") if notes_row else None,
         "commitment": {
-            "athlete":    val("B49"),
-            "coach":      val("E49"),
-            "date":       val("H49"),
-            "nextReview": val("K49"),
+            "athlete":    raw(f"B{commit_row}"),
+            "coach":      raw(f"E{commit_row}"),
+            "date":       raw(f"H{commit_row}"),
+            "nextReview": raw(f"K{commit_row}"),
         },
     }
     return plan
