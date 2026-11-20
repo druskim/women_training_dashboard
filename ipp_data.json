@@ -116,26 +116,27 @@
      }
     ],
     "priorities": [
-     [
-      "Hold Position / Rollng forward / backwards",
-      "Rolls forward before ball makes contact",
-      "Controlled slides without ball and holding position for 3 seconds",
-      "Complete 20 slides per day without ball"
-     ],
-     [
-      "Spin Shot - Stage 3",
-      "Feet are not in proper alignment",
-      "Practice stage 1 - 4 without ball.  Can put tape down on floor and work on consistenty.  Try to do at game speed",
-      "Complete 25 per day"
-     ],
-     [
-      "Spin Shot - Stage 4",
-      "Feet are not in proper alignment",
-      "Practice stage 1 - 4 without ball.  Can put tape down on floor and work on consistenty.  Try to do at game speed",
-      "Complete 25 per day"
-     ]
+     {
+      "component": "Hold Position / Rollng forward / backwards",
+      "observation": "Rolls forward before ball makes contact",
+      "action": "Controlled slides without ball and holding position for 3 seconds",
+      "measure": "Complete 20 slides per day without ball"
+     },
+     {
+      "component": "Spin Shot - Stage 3",
+      "observation": "Feet are not in proper alignment",
+      "action": "Practice stage 1 - 4 without ball.  Can put tape down on floor and work on consistenty.  Try to do at game speed",
+      "measure": "Complete 25 per day"
+     },
+     {
+      "component": "Spin Shot - Stage 4",
+      "observation": "Feet are not in proper alignment",
+      "action": "Practice stage 1 - 4 without ball.  Can put tape down on floor and work on consistenty.  Try to do at game speed",
+      "measure": "Complete 25 per day"
+     }
     ],
     "reflection": null,
+    "reflectionNeeds": null,
     "checkin": {
      "actualHrs": null,
      "targetHrs": null,
@@ -333,26 +334,27 @@
      }
     ],
     "priorities": [
-     [
-      "Extension / length",
-      "Not consistent with extending arms",
-      "On-court defending of smooth and skip sbots to hands",
-      "20 specific shots to arms requiring appropriate extension of arms"
-     ],
-     [
-      "Hand / arm position",
-      "Not consistent with hand position",
-      "On-court defending of smooth and skip sbots to hands",
-      "20 specific shots to arms requiring appropriate extension of arms"
-     ],
-     [
-      "Spin Shot - Stage 3",
-      "Movement is slow, and can tighten rotation to increase speed of spin",
-      "Practice stage 1 - 5 without ball.  Can put tape down on floor and work on consistenty.",
-      "Complete 20 spins shots per day without ball"
-     ]
+     {
+      "component": "Extension / length",
+      "observation": "Not consistent with extending arms",
+      "action": "On-court defending of smooth and skip sbots to hands",
+      "measure": "20 specific shots to arms requiring appropriate extension of arms"
+     },
+     {
+      "component": "Hand / arm position",
+      "observation": "Not consistent with hand position",
+      "action": "On-court defending of smooth and skip sbots to hands",
+      "measure": "20 specific shots to arms requiring appropriate extension of arms"
+     },
+     {
+      "component": "Spin Shot - Stage 3",
+      "observation": "Movement is slow, and can tighten rotation to increase speed of spin",
+      "action": "Practice stage 1 - 5 without ball.  Can put tape down on floor and work on consistenty.",
+      "measure": "Complete 20 spins shots per day without ball"
+     }
     ],
     "reflection": null,
+    "reflectionNeeds": null,
     "checkin": {
      "actualHrs": null,
      "targetHrs": null,
@@ -550,26 +552,27 @@
      }
     ],
     "priorities": [
-     [
-      "Spin Shot - Stage 1",
-      "Not consistent with first step.",
-      "Practice stage 1, can put tape on floor to practice consistency",
-      "25 practice steps per day ensuring consistency.  Do combo of eyes open and eyes closed / shades"
-     ],
-     [
-      "Spin Shot - Stage 3",
-      "Not consistent with foot alignment",
-      "Practice stages 1 to 4 ensuring proper foot alignment",
-      "25 practice steps per day ensuring consistency.  Do combo of eyes open and eyes closed / shades"
-     ],
-     [
-      "Range",
-      "Susceptible to leaving space down the line",
-      "Practice slides without ball working on arm extension and holding position",
-      "25 slides per day"
-     ]
+     {
+      "component": "Spin Shot - Stage 1",
+      "observation": "Not consistent with first step.",
+      "action": "Practice stage 1, can put tape on floor to practice consistency",
+      "measure": "25 practice steps per day ensuring consistency.  Do combo of eyes open and eyes closed / shades"
+     },
+     {
+      "component": "Spin Shot - Stage 3",
+      "observation": "Not consistent with foot alignment",
+      "action": "Practice stages 1 to 4 ensuring proper foot alignment",
+      "measure": "25 practice steps per day ensuring consistency.  Do combo of eyes open and eyes closed / shades"
+     },
+     {
+      "component": "Range",
+      "observation": "Susceptible to leaving space down the line",
+      "action": "Practice slides without ball working on arm extension and holding position",
+      "measure": "25 slides per day"
+     }
     ],
     "reflection": null,
+    "reflectionNeeds": null,
     "checkin": {
      "actualHrs": null,
      "targetHrs": null,
@@ -767,26 +770,27 @@
      }
     ],
     "priorities": [
-     [
-      "Spin / Non Spin Starting Position / Set Up",
-      "Not consistent with starting position or net alignment",
-      "Practice starting position and stage 1",
-      "Complete 25 per day"
-     ],
-     [
-      "Spin / Non Spin Follow Through",
-      "Not consistent with plant foot on follow through",
-      "Practice stage 1 - 5 ensuring plant leg / knee keeps alignment over knee",
-      "Complete 25 per day"
-     ],
-     [
-      "Defensive Alignment",
-      "Not consistent with angle after slide",
-      "Practice slides and check body angle to develop consistency",
-      "Complete 20 slides per day without ball"
-     ]
+     {
+      "component": "Spin / Non Spin Starting Position / Set Up",
+      "observation": "Not consistent with starting position or net alignment",
+      "action": "Practice starting position and stage 1",
+      "measure": "Complete 25 per day"
+     },
+     {
+      "component": "Spin / Non Spin Follow Through",
+      "observation": "Not consistent with plant foot on follow through",
+      "action": "Practice stage 1 - 5 ensuring plant leg / knee keeps alignment over knee",
+      "measure": "Complete 25 per day"
+     },
+     {
+      "component": "Defensive Alignment",
+      "observation": "Not consistent with angle after slide",
+      "action": "Practice slides and check body angle to develop consistency",
+      "measure": "Complete 20 slides per day without ball"
+     }
     ],
     "reflection": null,
+    "reflectionNeeds": null,
     "checkin": {
      "actualHrs": null,
      "targetHrs": null,
@@ -984,26 +988,27 @@
      }
     ],
     "priorities": [
-     [
-      "Defense - Extension / length",
-      "Inconsistent with range",
-      "Practice slides per day and working on consistent range",
-      "Complete 20 slides per day without ball"
-     ],
-     [
-      "Defense - Hold Position / Rollng forward / backwards",
-      "Tends to roll forward",
-      "Practice slides per day and working on consistent range",
-      "Complete 20 slides per day without ball"
-     ],
-     [
-      "Spin / Non Spin Follow Through",
-      "Inconsistent with  follow through",
-      "Practice stages 1 - 5 with out ball",
-      "Complete 25 per day"
-     ]
+     {
+      "component": "Defense - Extension / length",
+      "observation": "Inconsistent with range",
+      "action": "Practice slides per day and working on consistent range",
+      "measure": "Complete 20 slides per day without ball"
+     },
+     {
+      "component": "Defense - Hold Position / Rollng forward / backwards",
+      "observation": "Tends to roll forward",
+      "action": "Practice slides per day and working on consistent range",
+      "measure": "Complete 20 slides per day without ball"
+     },
+     {
+      "component": "Spin / Non Spin Follow Through",
+      "observation": "Inconsistent with  follow through",
+      "action": "Practice stages 1 - 5 with out ball",
+      "measure": "Complete 25 per day"
+     }
     ],
     "reflection": null,
+    "reflectionNeeds": null,
     "checkin": {
      "actualHrs": null,
      "targetHrs": null,
@@ -1201,26 +1206,27 @@
      }
     ],
     "priorities": [
-     [
-      "Defense - Ready position",
-      "Not consistent with court orientaiton or setup",
-      "Practice setting up and alignment",
-      "Complete 25 per day"
-     ],
-     [
-      "Defense - Alignment",
-      "Not consistent with court orientaiton or setup",
-      "Practice setting up and alignment",
-      "Complete 25 per day"
-     ],
-     [
-      "Spin Shot - Stage 1",
-      "Not consistent with first step of throw",
-      "Practice stage 1 - 3 to ensure consistency",
-      "Complete 25 per day"
-     ]
+     {
+      "component": "Defense - Ready position",
+      "observation": "Not consistent with court orientaiton or setup",
+      "action": "Practice setting up and alignment",
+      "measure": "Complete 25 per day"
+     },
+     {
+      "component": "Defense - Alignment",
+      "observation": "Not consistent with court orientaiton or setup",
+      "action": "Practice setting up and alignment",
+      "measure": "Complete 25 per day"
+     },
+     {
+      "component": "Spin Shot - Stage 1",
+      "observation": "Not consistent with first step of throw",
+      "action": "Practice stage 1 - 3 to ensure consistency",
+      "measure": "Complete 25 per day"
+     }
     ],
     "reflection": null,
+    "reflectionNeeds": null,
     "checkin": {
      "actualHrs": null,
      "targetHrs": null,
@@ -1418,26 +1424,27 @@
      }
     ],
     "priorities": [
-     [
-      "Defense - First movement / reaction",
-      "Not consistent with body angle",
-      "Practice setup and pushoff",
-      "Complete 25 per day"
-     ],
-     [
-      "Defense - Body Position",
-      "Not consistent with body angle",
-      "Practice setup and pushoff, while holding body position",
-      "Complete 25 per day"
-     ],
-     [
-      "Spin Shot - Stage 4",
-      "Not consistent with foot alignment",
-      "Practice stages 1 - 4 with out ball",
-      "Complete 25 per day without ball"
-     ]
+     {
+      "component": "Defense - First movement / reaction",
+      "observation": "Not consistent with body angle",
+      "action": "Practice setup and pushoff",
+      "measure": "Complete 25 per day"
+     },
+     {
+      "component": "Defense - Body Position",
+      "observation": "Not consistent with body angle",
+      "action": "Practice setup and pushoff, while holding body position",
+      "measure": "Complete 25 per day"
+     },
+     {
+      "component": "Spin Shot - Stage 4",
+      "observation": "Not consistent with foot alignment",
+      "action": "Practice stages 1 - 4 with out ball",
+      "measure": "Complete 25 per day without ball"
+     }
     ],
     "reflection": null,
+    "reflectionNeeds": null,
     "checkin": {
      "actualHrs": null,
      "targetHrs": null,
@@ -1635,26 +1642,27 @@
      }
     ],
     "priorities": [
-     [
-      "Body Position",
-      "Due to length of time off, need to develop consistency in defensive technique",
-      "Practice daily slides to improve consistency",
-      "Complete 25 per day"
-     ],
-     [
-      "Leg Position",
-      "Due to length of time off, need to develop consistency in defensive technique",
-      "Practice daily slides to improve consistency",
-      "Complete 25 per day"
-     ],
-     [
-      "Spin Shot - Stage 4",
-      "Develop consistency in a spin shot",
-      "Practice stages 1 - 4 to improve consistency in spin shot",
-      "Complete 25 per day without ball"
-     ]
+     {
+      "component": "Body Position",
+      "observation": "Due to length of time off, need to develop consistency in defensive technique",
+      "action": "Practice daily slides to improve consistency",
+      "measure": "Complete 25 per day"
+     },
+     {
+      "component": "Leg Position",
+      "observation": "Due to length of time off, need to develop consistency in defensive technique",
+      "action": "Practice daily slides to improve consistency",
+      "measure": "Complete 25 per day"
+     },
+     {
+      "component": "Spin Shot - Stage 4",
+      "observation": "Develop consistency in a spin shot",
+      "action": "Practice stages 1 - 4 to improve consistency in spin shot",
+      "measure": "Complete 25 per day without ball"
+     }
     ],
     "reflection": null,
+    "reflectionNeeds": null,
     "checkin": {
      "actualHrs": null,
      "targetHrs": null,
@@ -1852,26 +1860,27 @@
      }
     ],
     "priorities": [
-     [
-      "Defensive - Alignment",
-      "Develop consistency in defensive technique",
-      "Practice defensive slides to gain consistency in technique",
-      "Complete 25 per day"
-     ],
-     [
-      "Defensive - Hand / arm position",
-      "Develop consistency in defensive technique",
-      "Practice defensive slides to gain consistency in technique",
-      "Complete 25 per day"
-     ],
-     [
-      "Spin Shot - Stage 4",
-      "Develop consistency in spin shot, with specific focus on balance and centre of mass.",
-      "Practice stages 1 - 4 to improve technique",
-      "Complete 25 per day (Ideally with ball)"
-     ]
+     {
+      "component": "Defensive - Alignment",
+      "observation": "Develop consistency in defensive technique",
+      "action": "Practice defensive slides to gain consistency in technique",
+      "measure": "Complete 25 per day"
+     },
+     {
+      "component": "Defensive - Hand / arm position",
+      "observation": "Develop consistency in defensive technique",
+      "action": "Practice defensive slides to gain consistency in technique",
+      "measure": "Complete 25 per day"
+     },
+     {
+      "component": "Spin Shot - Stage 4",
+      "observation": "Develop consistency in spin shot, with specific focus on balance and centre of mass.",
+      "action": "Practice stages 1 - 4 to improve technique",
+      "measure": "Complete 25 per day (Ideally with ball)"
+     }
     ],
     "reflection": null,
+    "reflectionNeeds": null,
     "checkin": {
      "actualHrs": null,
      "targetHrs": null,
@@ -2069,26 +2078,27 @@
      }
     ],
     "priorities": [
-     [
-      "Defensive - First movement / reaction",
-      "Not consistent with reaction and first movements of defensice slide",
-      "Practice being quicker with the initial movement once you have commited to your direction of slide",
-      "Complete 25 per day"
-     ],
-     [
-      "Defensive - Extension / length",
-      "Not consistent with extending arms and legs during slide",
-      "Practice complete defensive slide holding position at end to improve consistency",
-      "Complete 25 per day"
-     ],
-     [
-      "Spin Shot - Stage 4",
-      "The final stages of throw is the area that needs most improvement, especially ball release",
-      "Practice stages 1 - 5 focussing on stages 3 - 5",
-      "Complete 25 per day without ball"
-     ]
+     {
+      "component": "Defensive - First movement / reaction",
+      "observation": "Not consistent with reaction and first movements of defensice slide",
+      "action": "Practice being quicker with the initial movement once you have commited to your direction of slide",
+      "measure": "Complete 25 per day"
+     },
+     {
+      "component": "Defensive - Extension / length",
+      "observation": "Not consistent with extending arms and legs during slide",
+      "action": "Practice complete defensive slide holding position at end to improve consistency",
+      "measure": "Complete 25 per day"
+     },
+     {
+      "component": "Spin Shot - Stage 4",
+      "observation": "The final stages of throw is the area that needs most improvement, especially ball release",
+      "action": "Practice stages 1 - 5 focussing on stages 3 - 5",
+      "measure": "Complete 25 per day without ball"
+     }
     ],
     "reflection": null,
+    "reflectionNeeds": null,
     "checkin": {
      "actualHrs": null,
      "targetHrs": null,
@@ -2286,26 +2296,27 @@
      }
     ],
     "priorities": [
-     [
-      "Defensive - First movement / reaction",
-      "Need to become quicker with the initial movement once commited to what directeion you are going",
-      "Practice defensive slides and being quicker with initial push / movement",
-      "Complete 25 per day"
-     ],
-     [
-      "Defensive - Extension / length",
-      "Need to become more consistent with body alignment and techniqyue at end of slide",
-      "Practice slides and holding position at end to make sure technique holds",
-      "Complete 25 per day"
-     ],
-     [
-      "Spin Shot - Stage 4",
-      "Not consistent with the release of the ball",
-      "Practice stages 1 - 4 to develop consistency in the final stages of the throw",
-      "Complete 25 per day"
-     ]
+     {
+      "component": "Defensive - First movement / reaction",
+      "observation": "Need to become quicker with the initial movement once commited to what directeion you are going",
+      "action": "Practice defensive slides and being quicker with initial push / movement",
+      "measure": "Complete 25 per day"
+     },
+     {
+      "component": "Defensive - Extension / length",
+      "observation": "Need to become more consistent with body alignment and techniqyue at end of slide",
+      "action": "Practice slides and holding position at end to make sure technique holds",
+      "measure": "Complete 25 per day"
+     },
+     {
+      "component": "Spin Shot - Stage 4",
+      "observation": "Not consistent with the release of the ball",
+      "action": "Practice stages 1 - 4 to develop consistency in the final stages of the throw",
+      "measure": "Complete 25 per day"
+     }
     ],
     "reflection": null,
+    "reflectionNeeds": null,
     "checkin": {
      "actualHrs": null,
      "targetHrs": null,
