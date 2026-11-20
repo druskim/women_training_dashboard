@@ -286,6 +286,13 @@
     .ipp-table td { padding: 7px 10px; vertical-align: top; }
     .ipp-table tr:hover td { background: transparent; }
     .ipp-table tr.prio td:first-child { font-weight: 600; }
+    .ipp-upcoming tr.ipp-now td { background: #13161f; }
+    .ipp-upcoming .hint { color: var(--muted); font-size: 11px; }
+    .ipp-hbar { display: inline-block; width: 70px; height: 8px; background: var(--border); border-radius: 4px;
+                vertical-align: middle; margin-right: 6px; overflow: hidden; }
+    .ipp-hbar { position: relative; }
+    .ipp-hbar i { display: block; height: 100%; background: var(--red); }
+    .ipp-hbar b { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--text); opacity: .7; }
     .ipp-prio-table td { line-height: 1.45; }
     .ipp-prio-table td:nth-child(2) { min-width: 140px; }
     .ipp-n { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px;
@@ -1027,6 +1034,11 @@ function ytpWorkbookToWeeks(wb) {
     weeks.set(wk, { phase, targetMin, estimated });
   }
   return weeks;
+}
+
+// Below this many hours a week is only expected in a deload; other weeks under it get flagged
+function ytpBelowThreshold(phase, minutes) {
+  return minutes != null && minutes < (CONFIG.LOAD_THRESHOLD_HOURS ?? 10) * 60 && !/deload/i.test(phase || '');
 }
 
 // YTP week for a dashboard week (Monday key): the YTP week starting the Sunday before
@@ -2107,6 +2119,9 @@ function ippCheckin(a) {
   } else {
     ci.targetNote = plan ? 'Camp / competition week — no home target' : 'No YTP week found';
   }
+  const threshold = CONFIG.LOAD_THRESHOLD_HOURS ?? 10;
+  if (plan && plan.targetMin != null && ytpBelowThreshold(plan.phase, actual))
+    ci.targetNote += ` · Under ${threshold} h outside a deload`;
 
   // Load: the athlete's week-on-week change vs the change the YTP plans (±10 points is on track)
   if (plan?.targetMin && planBefore?.targetMin && actualBefore > 0) {
@@ -2138,6 +2153,56 @@ function ippCheckin(a) {
   return ci;
 }
 
+// Upcoming weeks from the YTP: phase, expected hours and the planned change in load.
+// Same plan for every athlete for now. Empty when the YTP isn't loaded.
+const UPCOMING_WEEKS = 8;
+function upcomingPlanSection(a) {
+  if (!YTP_WEEKS) return '';
+  const rows = [];
+  let prevTarget = ytpWeek(addWeeks(a.currentWk, -1))?.targetMin ?? null;
+  for (let i = 0; i < UPCOMING_WEEKS; i++) {
+    const wk = addWeeks(a.currentWk, i), w = ytpWeek(wk);
+    if (!w) break;
+    const p = w.phase.toLowerCase();
+    const kind = /taper/.test(p) ? 'Taper' : /deload/.test(p) ? 'Deload' : /^gpp/.test(p) ? 'Build' : 'Camp / competition';
+    // Load change is against the last week that had a target (camp weeks have none)
+    const change = w.targetMin && prevTarget ? w.targetMin / prevTarget - 1 : null;
+    rows.push({ wk, phase: w.phase, kind, hours: w.targetMin ? w.targetMin / 60 : null, estimated: w.estimated, change });
+    if (w.targetMin) prevTarget = w.targetMin;
+  }
+  if (!rows.length) return '';
+
+  const threshold = CONFIG.LOAD_THRESHOLD_HOURS ?? 10;
+  const maxH = Math.max(...rows.map(r => r.hours || 0), threshold * 1.15);
+  const tickAt = Math.round(threshold / maxH * 100);
+  const kindBadge = { 'Build': 'green', 'Taper': 'blue', 'Deload': 'yellow', 'Camp / competition': 'grey' };
+  const fmtChange = c => c == null ? '<span class="no-data">—</span>'
+    : `<span style="color:${c > 0.005 ? 'var(--green)' : c < -0.005 ? 'var(--yellow)' : 'var(--muted)'}">${c > 0.005 ? '▲' : c < -0.005 ? '▼' : '●'} ${c >= 0 ? '+' : '−'}${Math.abs(Math.round(c * 100))}%</span>`;
+  const anyEstimated = rows.some(r => r.estimated);
+
+  return `<details open>
+    <summary>Upcoming Training Plan <span class="hint">— next ${rows.length} weeks, from the YTP</span></summary>
+    <div class="ipp-section">
+      <div style="overflow-x:auto"><table class="ipp-table ipp-upcoming">
+        <thead><tr><th>Week</th><th>Phase</th><th>Type</th><th>Expected hours</th><th>Load vs previous week</th></tr></thead>
+        <tbody>${rows.map((r, i) => {
+          const end = parseDateKey(r.wk); end.setDate(end.getDate() + 6);
+          return `<tr${i === 0 ? ' class="ipp-now"' : ''}>
+          <td style="white-space:nowrap">${fmtDate(r.wk)}–${fmtDate(toDateKey(end))}${i === 0 ? ' <span class="hint">(this week)</span>' : ''}</td>
+          <td>${esc(r.phase)}</td>
+          <td><span class="badge badge-${kindBadge[r.kind]}">${r.kind}</span></td>
+          <td style="white-space:nowrap">${r.hours != null
+            ? `<span class="ipp-hbar"><i style="width:${Math.round(r.hours / maxH * 100)}%"></i><b style="left:${tickAt}%"></b></span> ${r.hours.toFixed(1)} h${r.estimated ? '*' : ''}${
+                ytpBelowThreshold(r.phase, r.hours * 60) ? ` <span class="badge badge-orange" title="Under ${threshold} h is only expected in a deload">Below ${threshold} h</span>` : ''}`
+            : '<span class="no-data">No home target</span>'}</td>
+          <td style="white-space:nowrap">${fmtChange(r.change)}</td></tr>`;
+        }).join('')}</tbody>
+      </table></div>
+      <div class="acwr-ref">The line on each bar marks ${threshold} h: weeks below it should only be deloads. ${anyEstimated ? '* Estimated from the YTP (planned volume not filled in yet). ' : ''}Camp and competition weeks are trained on site, so they have no home target; the week after compares with the last week that had one.</div>
+    </div>
+  </details>`;
+}
+
 function renderIPP(a) {
   const el = document.getElementById('ind-ipp');
   if (!a.ipp) { el.innerHTML = ''; return; }
@@ -2147,6 +2212,7 @@ function renderIPP(a) {
     el.innerHTML = `<div class="ipp-card">
       <div class="ipp-head"><h3>Individual Performance Plan</h3></div>
       <div class="ipp-empty">This plan hasn't been filled in yet. It will appear here once the IPP sheet is completed and synced.</div>
+      ${upcomingPlanSection(a)}
     </div>`;
     return;
   }
@@ -2225,6 +2291,7 @@ function renderIPP(a) {
       <summary>Training Accountability Check-in <span class="hint">— ${esc(ci.weekLabel)}</span></summary>
       <div class="ipp-section">${checkin}</div>
     </details>
+    ${upcomingPlanSection(a)}
     <details>
       <summary>Technical Self-Assessment</summary>
       <div class="ipp-section ipp-grid-2">

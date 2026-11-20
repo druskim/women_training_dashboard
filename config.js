@@ -14,6 +14,8 @@ const CONFIG = {
   // Its "Meso YTP" tab gives each week's training phase and planned volume; weeks without a
   // planned volume get an estimate that follows the YTP's own ±5% progression rule.
   YTP_XLSX_URL: 'https://docs.google.com/spreadsheets/d/1hAswQizlsnej4QbZJCdYr4ate9qlpKfMZlJ9A3WnYGg/export?format=xlsx',
+  // Weekly hours below this should only happen in a deload; other weeks under it are flagged
+  LOAD_THRESHOLD_HOURS: 10,
 
   // Google Sheets questionnaire (bilingual form, 2027 season). The sheet must be shared as
   // "Anyone with the link can view"; the /export URL serves it as CSV.
