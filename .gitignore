@@ -2,3 +2,6 @@
 *.xlsx
 ~$*.xlsx
 __pycache__/
+
+# Raw Myzone CSV exports (merged into hr_data.csv by the sync)
+myzone_exports/
