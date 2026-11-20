@@ -2,7 +2,8 @@
 sync_hr_data.py
 ===============
 Downloads the HR data CSV from a SharePoint "anyone with the link" URL,
-converts the Individual Performance Plan workbook to ipp_data.json, and pushes
+converts the live Individual Performance Plan workbook (Google Drive) to ipp_data.json,
+saves a review snapshot to ipp_history.json when a Date completed changes, and pushes
 both to the GitHub repo using git CLI (handles large files).
 
 Requirements:
@@ -16,12 +17,15 @@ Usage:
 Schedule via Windows Task Scheduler or cron.
 """
 
+import json
 import os
 import subprocess
+from datetime import date
 
 import requests
 
-from ipp_to_json import DEFAULT_XLSX, JSON_PATH as IPP_JSON_PATH, to_json_text, workbook_to_data
+from ipp_to_json import (DEFAULT_XLSX, HISTORY_PATH as IPP_HISTORY_PATH, JSON_PATH as IPP_JSON_PATH,
+                         to_json_text, update_history, workbook_to_data)
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
@@ -31,10 +35,11 @@ SHAREPOINT_URL = (
     "?e=cKQ4A5"
 )
 
-# IPP workbook: paste its SharePoint "anyone with the link" URL here once it's shared.
-# Until then the workbook is read from IPP_LOCAL_PATH next to this script.
-IPP_SHAREPOINT_URL = ""
-IPP_LOCAL_PATH     = DEFAULT_XLSX
+# IPP workbook: the live copy on Google Drive (same file the dashboard reads, see config.js).
+# If it can't be downloaded, the local copy next to this script is used instead.
+IPP_DRIVE_URL  = ("https://docs.google.com/spreadsheets/d/"
+                  "1y_RA5llgTHyxk_ICyMNAp816ew44T-vJ/export?format=xlsx")
+IPP_LOCAL_PATH = DEFAULT_XLSX
 
 GITHUB_REPO    = "druskim/women_training_dashboard"
 CSV_PATH       = "hr_data.csv"   # path inside the repo
@@ -132,24 +137,46 @@ def push_via_git(files: dict[str, str], message: str, token: str, repo_name: str
     print(f"  Pushed {', '.join(paths)} → {repo_name} ({branch})")
 
 
-def load_ipp_json() -> str | None:
-    """Builds ipp_data.json text from the IPP workbook. Returns None on failure so the
-    HR sync still goes ahead (the dashboard keeps the last pushed plans)."""
+def download_ipp_workbook() -> bytes:
+    """The live IPP workbook from Google Drive, or the local copy if Drive can't be reached."""
     try:
-        if IPP_SHAREPOINT_URL:
-            raw = download_sharepoint_file(IPP_SHAREPOINT_URL)
-        else:
-            path = os.path.join(REPO_DIR, IPP_LOCAL_PATH)
-            print(f"  No IPP_SHAREPOINT_URL set — reading local file {path}")
-            with open(path, "rb") as f:
-                raw = f.read()
-        data = workbook_to_data(raw)
+        print(f"  Fetching: {IPP_DRIVE_URL}")
+        resp = requests.get(IPP_DRIVE_URL, headers={"User-Agent": "Mozilla/5.0"}, timeout=120)
+        resp.raise_for_status()
+        if resp.content[:2] != b"PK":  # .xlsx files are zip archives
+            raise ValueError("Drive returned a web page instead of the workbook (check its sharing)")
+        return resp.content
+    except Exception as e:
+        path = os.path.join(REPO_DIR, IPP_LOCAL_PATH)
+        print(f"  WARNING: Drive download failed ({e}) — reading local file {path}")
+        with open(path, "rb") as f:
+            return f.read()
+
+
+def load_ipp_files() -> dict[str, str]:
+    """ipp_data.json, plus ipp_history.json when a review has a new Date completed.
+    Returns {} on failure so the HR sync still goes ahead (the dashboard keeps the last plans)."""
+    try:
+        data = workbook_to_data(download_ipp_workbook())
         filled = sum(a["hasContent"] for a in data["athletes"])
         print(f"  {len(data['athletes'])} athletes on roster ({filled} with plan content)")
-        return to_json_text(data)
+        files = {IPP_JSON_PATH: to_json_text(data)}
+
+        history_file = os.path.join(REPO_DIR, IPP_HISTORY_PATH)
+        history = None
+        if os.path.exists(history_file):
+            with open(history_file, encoding="utf-8") as f:
+                history = json.load(f)
+        history, added = update_history(history, data, date.today().isoformat())
+        if added:
+            print(f"  New review snapshots: {', '.join(added)}")
+            files[IPP_HISTORY_PATH] = to_json_text(history)
+        else:
+            print("  No new Date completed — plan history unchanged")
+        return files
     except Exception as e:
         print(f"  WARNING: skipping IPP sync — {e}")
-        return None
+        return {}
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -170,10 +197,7 @@ def main():
     print(f"  {csv_text.count(chr(10)):,} rows")
 
     print("Step 3 — Converting IPP workbook...")
-    files = {CSV_PATH: csv_text}
-    ipp_json = load_ipp_json()
-    if ipp_json is not None:
-        files[IPP_JSON_PATH] = ipp_json
+    files = {CSV_PATH: csv_text, **load_ipp_files()}
 
     print("Step 4 — Pushing to GitHub via git...")
     push_via_git(files, COMMIT_MESSAGE, GITHUB_TOKEN, GITHUB_REPO)

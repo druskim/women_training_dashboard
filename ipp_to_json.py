@@ -13,6 +13,7 @@ Usage (standalone):
 Also called from sync_hr_data.py.
 """
 
+import copy
 import io
 import json
 import os
@@ -166,6 +167,53 @@ def workbook_to_data(xlsx_bytes: bytes) -> dict:
 
 def to_json_text(data: dict) -> str:
     return json.dumps(data, ensure_ascii=False, indent=1) + "\n"
+
+
+# ── Plan history ──────────────────────────────────────────────────────────────
+# One snapshot per review: an athlete's plan is saved when their "Date completed" (J6) changes
+# to a date not seen before. Later edits under the same date don't change the snapshot, so staff
+# should fill in Date completed once the review is finished.
+
+HISTORY_PATH = "ipp_history.json"
+
+_DATE_FORMATS = ("%Y-%m-%d", "%b %d %Y", "%B %d %Y", "%b %d, %Y", "%B %d, %Y",
+                 "%d %b %Y", "%d %B %Y", "%b. %d %Y", "%b. %d, %Y")
+
+
+def review_date(value) -> str | None:
+    """ISO date for a Date completed cell (a real date or text like 'Nov 18 2026'), else None."""
+    if not isinstance(value, str):
+        return None
+    text = " ".join(value.replace("Sept", "Sep").split())
+    for fmt in _DATE_FORMATS:
+        try:
+            return datetime.strptime(text, fmt).date().isoformat()
+        except ValueError:
+            pass
+    return None
+
+
+def update_history(history: dict | None, data: dict, today: str) -> tuple[dict, list[str]]:
+    """Adds a snapshot for each athlete whose Date completed is new. Returns (history, added)
+    where `added` lists 'Sheet (date)' for each new snapshot."""
+    history = history or {"athletes": {}}
+    added = []
+    for a in data["athletes"]:
+        completed = (a["plan"].get("header") or {}).get("dateCompleted")
+        if not completed:
+            continue
+        entries = history["athletes"].setdefault(a["sheet"], [])
+        if any(e["dateCompleted"] == completed for e in entries):
+            continue
+        entries.append({
+            "dateCompleted": completed,            # as typed in the workbook
+            "date":          review_date(completed) or (completed if completed[:4].isdigit() else None),
+            "captured":      today,                # day the sync first saw this review
+            "plan":          copy.deepcopy(a["plan"]),
+        })
+        entries.sort(key=lambda e: e["date"] or e["captured"])
+        added.append(f"{a['sheet']} ({completed})")
+    return history, added
 
 
 def main():
