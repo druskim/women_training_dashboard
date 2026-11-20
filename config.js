@@ -10,10 +10,18 @@ const CONFIG = {
   // (shared as "Anyone with the link can view"). Each athlete sheet adds them to the roster.
   IPP_XLSX_URL: 'https://docs.google.com/spreadsheets/d/1y_RA5llgTHyxk_ICyMNAp816ew44T-vJ/export?format=xlsx',
 
+  // Past IPP reviews: a snapshot of each athlete's plan, saved by sync_hr_data.py whenever their
+  // "Date completed" changes. Served from this repo next to index.html.
+  IPP_HISTORY_URL: 'ipp_history.json',
+
   // 2026–27 Yearly Training Plan (Google Sheet shared as "Anyone with the link can view").
-  // Its "Meso YTP" tab gives each week's training phase and planned volume; weeks without a
-  // planned volume get an estimate that follows the YTP's own ±5% progression rule.
+  // Its "Meso YTP" tab gives each week's training phase and planned volume. Weeks without a
+  // planned volume follow the YTP's GPP pattern, scaled up: each GPP block starts at
+  // TARGET_BASE_HOURS and adds 5% a week, tapers are 5% below the week before (not under the base), and deloads are
+  // DELOAD_FACTOR × the last training week (they may fall below the threshold).
   YTP_XLSX_URL: 'https://docs.google.com/spreadsheets/d/1hAswQizlsnej4QbZJCdYr4ate9qlpKfMZlJ9A3WnYGg/export?format=xlsx',
+  TARGET_BASE_HOURS: 10,
+  DELOAD_FACTOR: 0.8,
   // Weekly hours below this should only happen in a deload; other weeks under it are flagged
   LOAD_THRESHOLD_HOURS: 10,
 

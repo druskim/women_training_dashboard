@@ -16,6 +16,7 @@
       IPP_JSON_URL: 'demo/ipp_data.json',
       IPP_XLSX_URL: null,   // the sample plan comes from the JSON above
       YTP_XLSX_URL: null,   // no phase or targets on the sample page
+      IPP_HISTORY_URL: null,
       REFRESH_MINUTES: 0,
       SEASON_START: null,   // sample data isn't tied to the season
     });
@@ -286,6 +287,9 @@
     .ipp-table td { padding: 7px 10px; vertical-align: top; }
     .ipp-table tr:hover td { background: transparent; }
     .ipp-table tr.prio td:first-child { font-weight: 600; }
+    .ipp-history { font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+    .ipp-history select { background: #13161f; color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; font-size: 12px; }
+    .ipp-snapshot { background: #13161f; border-left: 3px solid var(--blue); border-radius: 4px; padding: 8px 12px; font-size: 12px; margin-bottom: 14px; }
     .ipp-upcoming tr.ipp-now td { background: #13161f; }
     .ipp-upcoming .hint { color: var(--muted); font-size: 11px; }
     .ipp-hbar { display: inline-block; width: 70px; height: 8px; background: var(--border); border-radius: 4px;
@@ -850,6 +854,21 @@ async function fetchIPP() {
   }
 }
 
+let IPP_HISTORY = null; // ipp_history.json: { athletes: { sheet: [ { dateCompleted, date, captured, plan } ] } }
+
+// Past review snapshots, saved by the sync when an athlete's Date completed changes. Optional.
+async function fetchIPPHistory() {
+  if (!CONFIG.IPP_HISTORY_URL) return null;
+  try {
+    const resp = await fetch(CONFIG.IPP_HISTORY_URL, { cache: 'no-cache' });
+    if (!resp.ok) return null;   // no reviews saved yet
+    return await resp.json();
+  } catch (e) {
+    console.warn('Could not load IPP history:', e);
+    return null;
+  }
+}
+
 // ============================================================
 //  IPP WORKBOOK PARSING  (mirrors ipp_to_json.py — keep the two in sync)
 // ============================================================
@@ -1012,25 +1031,34 @@ function ytpWorkbookToWeeks(wb) {
     return null;
   };
 
-  // Weeks with a planned total use it. Other weeks are estimated the way the YTP's own
-  // "Calculated Vol" formula works: + / − 5% on the previous week (from the "Vol △" cell, or
-  // + for GPP and − for tapers/deloads when it's blank), and ×0.9 for each week since the last
-  // value. Camp and competition weeks get no home target.
+  // Weeks with a planned total use it. Other weeks follow the YTP's GPP pattern, scaled so each
+  // block starts at TARGET_BASE_HOURS:
+  //   build (GPP): each block starts at the base and adds 5% a week
+  //   taper:       5% below the week before, but not under the base (only deloads go below it)
+  //   deload:      DELOAD_FACTOR × the last non-deload week (may fall below the base)
+  //   camp / competition: no home target (trained on site)
+  const base   = (CONFIG.TARGET_BASE_HOURS ?? 10) * 60;
+  const deload = CONFIG.DELOAD_FACTOR ?? 0.8;
   const weeks = new Map();
-  let last = null, gap = 0;
+  let last = null, lastLoaded = null, prevPhase = null, prevWasBuild = false, buildWeek = 0;
   for (const r of rows.slice(hi + 1)) {
     const wk = toKey(r[col.start]), phase = typeof r[col.phase] === 'string' ? r[col.phase].trim() : null;
     if (!wk || !phase) continue;
+    const p = phase.toLowerCase();
+    const kind = /taper/.test(p) ? 'taper' : /deload/.test(p) ? 'deload' : /^gpp/.test(p) ? 'build' : 'camp';
     const planned = typeof r[col.total] === 'number' && r[col.total] > 0 ? r[col.total] : null;
+
+    // A new build block starts when the phase name changes or the build was interrupted
+    buildWeek = kind === 'build' && prevWasBuild && phase === prevPhase ? buildWeek + 1 : 0;
     let targetMin = planned, estimated = false;
-    if (!planned && last != null) {
-      const d = String(r[col.delta] ?? '');
-      const p = phase.toLowerCase();
-      const dir = d.includes('+') ? 1 : d.includes('-') || d.includes('−') ? -1 : /\d/.test(d) ? 0
-                : /taper|deload/.test(p) ? -1 : /^gpp/.test(p) ? 1 : null;
-      if (dir != null) { targetMin = Math.round(last * 0.9 ** gap * (1 + 0.05 * dir)); estimated = true; }
+    if (!planned && kind !== 'camp') {
+      targetMin = Math.round(kind === 'build' ? base * 1.05 ** buildWeek
+                           : kind === 'taper' ? Math.max(base, (last ?? base) * 0.95)
+                           :                    (lastLoaded ?? base) * deload);
+      estimated = true;
     }
-    if (targetMin) { last = targetMin; gap = 0; } else gap++;
+    if (targetMin) { last = targetMin; if (kind !== 'deload') lastLoaded = targetMin; }
+    prevPhase = phase; prevWasBuild = kind === 'build';
     weeks.set(wk, { phase, targetMin, estimated });
   }
   return weeks;
@@ -2097,17 +2125,20 @@ function ippPips(rating) {
   return `<span class="ipp-pips" title="${n} / 5">${[1,2,3,4,5].map(i => `<i class="${i <= n ? 'on' : ''}"></i>`).join('')}</span> ${n}`;
 }
 
-// Check-in for the last full Mon–Sun week (same week as the ACWR), worked out live:
-// hours and load from HR data + questionnaire missed workouts, target and phase from the YTP,
-// participation and wellbeing from the questionnaire. Same YTP target for every athlete for now.
-function ippCheckin(a) {
-  const wk = addWeeks(a.currentWk, -1), wkBefore = addWeeks(wk, -1);
+// Check-in for the full Mon–Sun week before `refWk` (default: last week, same week as the ACWR),
+// worked out live: hours and load from HR data + questionnaire missed workouts, target and phase
+// from the YTP, participation and wellbeing from the questionnaire. For a past review, refWk is
+// the review's week, so the check-in shows the week leading into that review.
+// Same YTP target for every athlete for now.
+function ippCheckin(a, refWk = a.currentWk) {
+  const wk = addWeeks(refWk, -1), wkBefore = addWeeks(wk, -1);
   const minutesIn = w => (a.weeks[w]?.hr?.minutes || 0) + (calcMissedLoad(a.weeks[w]?.q?.missed || [])?.minutes || 0);
   const pct = x => `${x >= 0 ? '+' : '−'}${Math.abs(Math.round(x * 100))}%`;
   const plan = ytpWeek(wk), planBefore = ytpWeek(wkBefore);
   const actual = minutesIn(wk), actualBefore = minutesIn(wkBefore);
   const end = parseDateKey(wk); end.setDate(end.getDate() + 6);
-  const ci = { weekLabel: `last week, ${fmtDate(wk)}–${fmtDate(toDateKey(end))}${plan ? ` · ${plan.phase}` : ''}`,
+  const lead = refWk === a.currentWk ? 'last week' : 'week before the review';
+  const ci = { weekLabel: `${lead}, ${fmtDate(wk)}–${fmtDate(toDateKey(end))}${plan ? ` · ${plan.phase}` : ''}`,
                actualHrs: (actual / 60).toFixed(1), targetHrs: '—' };
 
   // Hours vs the YTP target: within ±10% is on track
@@ -2132,7 +2163,7 @@ function ippCheckin(a) {
     ci.loadNote = actualBefore > 0 ? 'No planned change to compare' : 'No training logged the week before';
   }
 
-  const acwr = a.curACWR;
+  const acwr = refWk === a.currentWk ? a.curACWR : calcACWR(a.mergedMepsByWk || {}, wk);
   ci.acwrValue  = acwr != null ? acwr.toFixed(2) : '—';
   ci.acwrStatus = acwr == null ? null : acwr < 0.8 ? 'Low' : acwr <= 1.3 ? 'Optimal' : acwr <= 1.5 ? 'Caution' : 'High risk';
 
@@ -2203,14 +2234,29 @@ function upcomingPlanSection(a) {
   </details>`;
 }
 
-function renderIPP(a) {
+let IPP_VIEW_ATHLETE = null; // athlete whose IPP card is showing (for the history picker)
+
+// histIdx: index into the athlete's review snapshots (ipp_history.json), or null for the live plan
+function renderIPP(a, histIdx = null) {
   const el = document.getElementById('ind-ipp');
   if (!a.ipp) { el.innerHTML = ''; return; }
-  const p = a.ipp.plan;
+  IPP_VIEW_ATHLETE = a;
+  const history = IPP_HISTORY?.athletes?.[a.ipp.sheet] || [];
+  const snap = histIdx != null ? history[histIdx] : null;
+  const p = snap ? snap.plan : a.ipp.plan;
+  // Week the plan belongs to: this week for the live plan, the review's week for a snapshot
+  const refWk = snap ? getMondayOfWeek(snap.date || snap.captured) : a.currentWk;
 
-  if (!a.ipp.hasContent) {
+  const picker = history.length ? `<label class="ipp-history">Plan
+      <select onchange="renderIPP(IPP_VIEW_ATHLETE, this.value === '' ? null : +this.value)">
+        <option value="">Current</option>
+        ${history.map((h, i) => `<option value="${i}"${i === histIdx ? ' selected' : ''}>Review ${
+          esc(/^\d{4}-\d{2}-\d{2}$/.test(h.dateCompleted) ? fmtDate(h.dateCompleted) : h.dateCompleted)}</option>`).reverse().join('')}
+      </select></label>` : '';
+
+  if (!snap && !a.ipp.hasContent) {
     el.innerHTML = `<div class="ipp-card">
-      <div class="ipp-head"><h3>Individual Performance Plan</h3></div>
+      <div class="ipp-head"><h3>Individual Performance Plan</h3>${picker}</div>
       <div class="ipp-empty">This plan hasn't been filled in yet. It will appear here once the IPP sheet is completed and synced.</div>
       ${upcomingPlanSection(a)}
     </div>`;
@@ -2221,11 +2267,11 @@ function renderIPP(a) {
   // Dates may be real dates or typed text ("Nov 18 2026", "February"); show text as typed
   const isIso   = v => /^\d{4}-\d{2}-\d{2}$/.test(v ?? '');
   const ippDate = v => isIso(v) ? fmtDate(v) : esc(v);
-  const overdue = isIso(hd.nextReview) && hd.nextReview < toDateKey(new Date());
+  const overdue = !snap && isIso(hd.nextReview) && hd.nextReview < toDateKey(new Date());
   const meta = [
     hd.position      && `<span>Position <b>${esc(hd.position)}</b></span>`,
-    (ytpWeek(a.currentWk)?.phase || hd.trainingBlock) &&
-      `<span>Block <b>${esc(ytpWeek(a.currentWk)?.phase || hd.trainingBlock)}</b></span>`,
+    (ytpWeek(refWk)?.phase || hd.trainingBlock) &&
+      `<span>Block <b>${esc(ytpWeek(refWk)?.phase || hd.trainingBlock)}</b></span>`,
     hd.dateCompleted && `<span>Completed <b>${ippDate(hd.dateCompleted)}</b></span>`,
     hd.nextReview    && `<span>Next review <b>${ippDate(hd.nextReview)}</b>${overdue ? ' <span class="badge badge-red">Overdue</span>' : ''}</span>`,
   ].filter(Boolean).join('');
@@ -2243,7 +2289,7 @@ function renderIPP(a) {
         <td>${esc(x.observation)}</td><td>${esc(x.action)}</td><td>${esc(x.measure)}</td></tr>`).join('')}
       </tbody></table></div>` : '';
 
-  const ci = ippCheckin(a);
+  const ci = ippCheckin(a, refWk);
   const ciBox = (label, value, note) =>
     `<div class="ipp-box"><h4>${label}</h4><div class="v">${value}</div>${note ? `<div class="live">${note}</div>` : ''}</div>`;
   const checkin = `<div class="ipp-checkin">
@@ -2275,11 +2321,12 @@ function renderIPP(a) {
 
   const cm = p.commitment || {};
   const commitment = [cm.athlete && `Athlete: ${esc(cm.athlete)}`, cm.coach && `Coach: ${esc(cm.coach)}`,
-                      cm.date && `Signed ${fmtDate(cm.date)}`, cm.nextReview && `Next review ${fmtDate(cm.nextReview)}`]
+                      cm.date && `Signed ${ippDate(cm.date)}`, cm.nextReview && `Next review ${ippDate(cm.nextReview)}`]
                      .filter(Boolean).join(' · ');
 
   el.innerHTML = `<div class="ipp-card">
-    <div class="ipp-head"><h3>Individual Performance Plan</h3><div class="ipp-meta">${meta}</div></div>
+    <div class="ipp-head"><h3>Individual Performance Plan</h3><div class="ipp-meta">${meta}</div>${picker}</div>
+    ${snap ? `<div class="ipp-snapshot">Viewing the plan as saved at the review on <b>${ippDate(snap.dateCompleted)}</b>. The check-in shows the week before that review. Choose <b>Current</b> to see the live plan.</div>` : ''}
 
     <div class="ipp-box" style="margin-bottom:14px"><h4>My DTE Priorities</h4>${prios || ippText(null)}</div>
     <div class="ipp-grid-2" style="margin-bottom:14px">
@@ -2291,9 +2338,9 @@ function renderIPP(a) {
       <summary>Training Accountability Check-in <span class="hint">— ${esc(ci.weekLabel)}</span></summary>
       <div class="ipp-section">${checkin}</div>
     </details>
-    ${upcomingPlanSection(a)}
+    ${snap ? '' : upcomingPlanSection(a)}
     <details>
-      <summary>Technical Self-Assessment</summary>
+      <summary>Technical Assessment <span class="hint">— assessed by Trent</span></summary>
       <div class="ipp-section ipp-grid-2">
         ${assessTable('Offensive', p.offensive || [])}
         ${assessTable('Defensive', p.defensive || [])}
@@ -2518,14 +2565,16 @@ async function loadData() {
       throw new Error('QUESTIONNAIRE_URL is not set in config.js');
     }
 
-    const [hrRows, qRows, ipp, ytp] = await Promise.all([
+    const [hrRows, qRows, ipp, ytp, ippHistory] = await Promise.all([
       fetchCSV(CONFIG.HR_CSV_URL, 'HR CSV (Google Sheets)'),
       fetchCSV(CONFIG.QUESTIONNAIRE_URL, 'Questionnaire (Google Sheets)'),
       fetchIPP(),
       fetchYTP(),
+      fetchIPPHistory(),
     ]);
     IPP_DATA = ipp;
     YTP_WEEKS = ytp;
+    IPP_HISTORY = ippHistory;
 
     document.getElementById('loading-msg').textContent = 'Processing…';
 
