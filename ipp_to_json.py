@@ -90,10 +90,16 @@ def _parse_sheet(ws, tpl) -> dict:
         },
         "offensive": assessment("A", "E", "F"),
         "defensive": assessment("G", "K", "L"),
-        # Priority rows have several unlabelled text boxes; keep the non-empty ones in order
-        "priorities": [[p for p in (val(f"{c}{r}") for c in "BDGJK") if p is not None]
+        # Each priority row: technical component (B), what's happening (D), action (G),
+        # measure (J; older sheets kept it in K)
+        "priorities": [{"component":   val(f"B{r}"),
+                        "observation": val(f"D{r}"),
+                        "action":      val(f"G{r}"),
+                        "measure":     val(f"J{r}") if val(f"J{r}") is not None else val(f"K{r}")}
                        for r in (20, 21, 22)],
-        "reflection": val("A24"),
+        # The reflection box is split in two on the athlete sheets (A24 | G24); older sheets used A24 only
+        "reflection":      val("A24"),
+        "reflectionNeeds": raw("G24"),
         "checkin": {
             "actualHrs":   val("A28"),
             "targetHrs":   val("B28"),
