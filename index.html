@@ -331,8 +331,8 @@
   DEMO MODE — Athlete names have been anonymised
 </div>
 <header>
-  <h1>Women's National Team Training Dashboard — 2027 Season</h1>
-  <a href="legacy/2025-26/" style="color:#fff;font-size:13px;text-decoration:none;padding:7px 12px;border-radius:4px;background:rgba(255,255,255,.18)">2025–26 Archive</a>
+  <h1 id="page-title">Women's National Team Training Dashboard — 2027 Season</h1>
+  <a id="archive-link" href="legacy/2025-26/" style="color:#fff;font-size:13px;text-decoration:none;padding:7px 12px;border-radius:4px;background:rgba(255,255,255,.18)">2025–26 Archive</a>
   <span class="meta" id="last-updated"></span>
   <button onclick="refreshData()">Refresh</button>
 </header>
@@ -530,6 +530,15 @@
 //  ATHLETE LINK MODE — detect ?athlete= param
 //  DEMO MODE        — detect ?demo=true (anonymises names)
 // ============================================================
+// One page serves both teams: config.js names the team (TEAM_NAME) and can hide the archive link
+// (ARCHIVE_URL: null). Without them it is the women's dashboard.
+if (CONFIG.TEAM_NAME) {
+  document.title = `${CONFIG.TEAM_NAME} Training Dashboard — 2027`;
+  document.getElementById('page-title').textContent = `${CONFIG.TEAM_NAME} Training Dashboard — 2027 Season`;
+}
+if (CONFIG.ARCHIVE_URL === null) document.getElementById('archive-link').style.display = 'none';
+else if (CONFIG.ARCHIVE_URL) document.getElementById('archive-link').href = CONFIG.ARCHIVE_URL;
+
 const ATHLETE_PARAM = new URLSearchParams(window.location.search).get('athlete');
 const DEMO_MODE     = new URLSearchParams(window.location.search).get('demo') === 'true';
 
@@ -623,7 +632,9 @@ const ATHLETE_ALIASES = {
   'maryam salehi':     'maryam salehizadeh',
   'jade ondrik':       'jade ondirk',   // HR file is Jade_Ondrik.csv; she signs the questionnaire "Ondirk"
 };
-function resolveAlias(an) { return ATHLETE_ALIASES[an] || an; }
+// roster.json (ROSTER_URL) may add its own spellings: { "aliases": { "variant": "canonical" } }
+let ROSTER_ALIASES = {};
+function resolveAlias(an) { return ROSTER_ALIASES[an] || ATHLETE_ALIASES[an] || an; }
 
 function parseScore(v) {
   if (v == null || v === '') return null;
@@ -1309,11 +1320,24 @@ let HR_DUPLICATES = []; // HR rows skipped as repeats of an already-counted athl
 let Q_DATA  = {};
 
 let IPP_DATA = null; // parsed ipp_data.json, or null if it failed to load
+let ROSTER = null;   // athlete names from roster.json (ROSTER_URL), or null to use the IPP sheets
+
+// { "athletes": ["First Last", ...], "aliases": { "variant": "canonical" } }. Without it the
+// roster comes from the IPP workbook; if it is set but can't load, the page shows an error,
+// since falling back to everyone in the HR data could show the wrong team.
+async function fetchRoster() {
+  if (!CONFIG.ROSTER_URL) return null;
+  const resp = await fetch(CONFIG.ROSTER_URL, { cache: 'no-cache' });
+  if (!resp.ok) throw new Error(`Could not load the roster (${CONFIG.ROSTER_URL}): HTTP ${resp.status}`);
+  return resp.json();
+}
 
 // The IPP workbook's sheets define the roster. Match each sheet to an athlete in the
 // HR/questionnaire data by full name (if filled in on the plan) or by first name.
 // Returns Map(athleteKey → plan entry), or null when no roster is available.
 function resolveRoster(dataNames) {
+  // A fixed roster (roster.json) replaces the IPP sheets: everyone on it gets a profile, no plans
+  if (ROSTER) return new Map(ROSTER.map(n => [resolveAlias(normalizeName(n)), null]));
   if (!IPP_DATA?.athletes?.length) return null;
   const roster = new Map();
   for (const entry of IPP_DATA.athletes) {
@@ -2562,17 +2586,22 @@ async function loadData() {
     if (!CONFIG.HR_CSV_URL || CONFIG.HR_CSV_URL === 'YOUR_HR_CSV_URL_HERE') {
       throw new Error('HR_CSV_URL is not set in config.js');
     }
-    if (!CONFIG.QUESTIONNAIRE_URL || CONFIG.QUESTIONNAIRE_URL === 'YOUR_GOOGLE_SHEETS_CSV_URL_HERE') {
+    // The questionnaire is optional (QUESTIONNAIRE_URL: null) until a team's form exists
+    if (CONFIG.QUESTIONNAIRE_URL === 'YOUR_GOOGLE_SHEETS_CSV_URL_HERE') {
       throw new Error('QUESTIONNAIRE_URL is not set in config.js');
     }
 
-    const [hrRows, qRows, ipp, ytp, ippHistory] = await Promise.all([
+    const [hrRows, qRows, ipp, ytp, ippHistory, roster] = await Promise.all([
       fetchCSV(CONFIG.HR_CSV_URL, 'HR CSV (Google Sheets)'),
-      fetchCSV(CONFIG.QUESTIONNAIRE_URL, 'Questionnaire (Google Sheets)'),
-      fetchIPP(),
+      CONFIG.QUESTIONNAIRE_URL ? fetchCSV(CONFIG.QUESTIONNAIRE_URL, 'Questionnaire (Google Sheets)') : [],
+      CONFIG.ROSTER_URL ? null : fetchIPP(),
       fetchYTP(),
       fetchIPPHistory(),
+      fetchRoster(),
     ]);
+    ROSTER = roster?.athletes || null;
+    ROSTER_ALIASES = Object.fromEntries(Object.entries(roster?.aliases || {})
+      .map(([k, v]) => [normalizeName(k), normalizeName(v)]));
     IPP_DATA = ipp;
     YTP_WEEKS = ytp;
     IPP_HISTORY = ippHistory;

@@ -6,6 +6,10 @@ converts the live Individual Performance Plan workbook (Google Drive) to ipp_dat
 saves a review snapshot to ipp_history.json when a Date completed changes, and pushes
 both to the GitHub repo using git CLI (handles large files).
 
+The SharePoint export holds both teams. Athletes on the men's roster (roster.json in the
+men's dashboard folder, next to this one) go to the men's repo, with a copy of this
+index.html; everyone else stays in the women's hr_data.csv.
+
 Requirements:
     pip install -r requirements.txt
     git must be installed and on PATH
@@ -17,8 +21,10 @@ Usage:
 Schedule via Windows Task Scheduler or cron.
 """
 
+import csv
 import json
 import os
+import re
 import subprocess
 from datetime import date
 
@@ -50,6 +56,12 @@ GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 # Directory containing this script (= root of the git repo)
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# Men's dashboard: its own local git repo next to this one. Its roster.json lists who goes there.
+MEN_REPO_DIR    = os.path.join(os.path.dirname(REPO_DIR), "men-dashboard")
+MEN_GITHUB_REPO = "druskim/men_training_dashboard"
+MEN_ROSTER_PATH = "roster.json"
+SHARED_PAGE     = "index.html"   # the same dashboard page serves both teams (see config.js)
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def download_sharepoint_file(sharing_url: str) -> bytes:
@@ -80,9 +92,9 @@ def to_csv_text(content: bytes) -> str:
     return content.decode("utf-8-sig")  # strips BOM if present
 
 
-def git(args: list[str], **kwargs) -> subprocess.CompletedProcess:
-    """Run a git command in REPO_DIR."""
-    result = subprocess.run(["git"] + args, cwd=REPO_DIR,
+def git(args: list[str], cwd: str = REPO_DIR, **kwargs) -> subprocess.CompletedProcess:
+    """Run a git command in a repo folder (default: this one)."""
+    result = subprocess.run(["git"] + args, cwd=cwd,
                             capture_output=True, text=True, **kwargs)
     if result.returncode != 0:
         raise RuntimeError(
@@ -93,11 +105,12 @@ def git(args: list[str], **kwargs) -> subprocess.CompletedProcess:
     return result
 
 
-def push_via_git(files: dict[str, str], message: str, token: str, repo_name: str) -> None:
-    """Write files ({repo path: text}) locally and push via git CLI using the token for auth."""
+def push_via_git(files: dict[str, str], message: str, token: str, repo_name: str,
+                 repo_dir: str = REPO_DIR) -> None:
+    """Write files ({repo path: text}) into repo_dir and push via git CLI using the token for auth."""
     paths = list(files)
     for path, content in files.items():
-        full_path = os.path.join(REPO_DIR, path)
+        full_path = os.path.join(repo_dir, path)
         with open(full_path, "w", encoding="utf-8", newline="") as f:
             f.write(content)
         print(f"  Written: {full_path}")
@@ -105,7 +118,7 @@ def push_via_git(files: dict[str, str], message: str, token: str, repo_name: str
     # Check for changes
     result = subprocess.run(
         ["git", "status", "--porcelain", *paths],
-        cwd=REPO_DIR, capture_output=True, text=True
+        cwd=repo_dir, capture_output=True, text=True
     )
     if not result.stdout.strip():
         print("  No changes — files are identical to last push.")
@@ -115,26 +128,68 @@ def push_via_git(files: dict[str, str], message: str, token: str, repo_name: str
     remote_url     = f"https://x-access-token:{token}@github.com/{repo_name}.git"
     clean_url      = f"https://github.com/{repo_name}.git"
 
-    git(["add", *paths])
-    git(["commit", "-m", message])
+    git(["add", *paths], cwd=repo_dir)
+    git(["commit", "-m", message], cwd=repo_dir)
 
     # Detect current branch
-    branch = git(["branch", "--show-current"]).stdout.strip() or "main"
+    branch = git(["branch", "--show-current"], cwd=repo_dir).stdout.strip() or "main"
     print(f"  Pushing to origin/{branch}...")
 
     # Embed token in remote URL only for the push, then immediately restore
-    git(["remote", "set-url", "origin", remote_url])
+    git(["remote", "set-url", "origin", remote_url], cwd=repo_dir)
     try:
-        git(["push", "origin", branch])
+        git(["push", "origin", branch], cwd=repo_dir)
     except Exception:
         # Undo the commit so the next run retries cleanly
-        subprocess.run(["git", "reset", "HEAD~1"], cwd=REPO_DIR, capture_output=True)
+        subprocess.run(["git", "reset", "HEAD~1"], cwd=repo_dir, capture_output=True)
         raise
     finally:
         subprocess.run(["git", "remote", "set-url", "origin", clean_url],
-                       cwd=REPO_DIR, capture_output=True)
+                       cwd=repo_dir, capture_output=True)
 
     print(f"  Pushed {', '.join(paths)} → {repo_name} ({branch})")
+
+
+def athlete_key(file_name: str, aliases: dict[str, str]) -> str:
+    """'Peter_Parsons.csv' → 'peter parsons', with roster spellings applied (as the dashboard does)."""
+    name = re.sub(r"\.csv$", "", file_name.strip(), flags=re.I).replace("_", " ").lower().strip()
+    return aliases.get(name, name)
+
+
+def load_men_roster() -> tuple[set[str], dict[str, str]] | None:
+    """Normalised names and aliases from the men's roster.json, or None if it isn't set up."""
+    path = os.path.join(MEN_REPO_DIR, MEN_ROSTER_PATH)
+    if not os.path.exists(path):
+        print(f"  WARNING: no men's roster at {path} — all HR data stays in the women's repo")
+        return None
+    with open(path, encoding="utf-8") as f:
+        roster = json.load(f)
+    aliases = {k.lower().strip(): v.lower().strip() for k, v in roster.get("aliases", {}).items()}
+    names = {aliases.get(n.lower().strip(), n.lower().strip()) for n in roster["athletes"]}
+    return names, aliases
+
+
+def split_hr_csv(csv_text: str, men: set[str], aliases: dict[str, str]) -> tuple[str, str]:
+    """(women's CSV, men's CSV), split by the athlete in file_name; both keep the header.
+    Lines are copied unchanged, so the women's file only loses the men's rows."""
+    lines = csv_text.splitlines(keepends=True)
+    if not lines:
+        return csv_text, ""
+    col = next(csv.reader([lines[0]])).index("file_name")
+    women, men_lines = [lines[0]], [lines[0]]
+    for line in lines[1:]:
+        fields = next(csv.reader([line]), [])
+        is_man = len(fields) > col and athlete_key(fields[col], aliases) in men
+        (men_lines if is_man else women).append(line)
+    return "".join(women), "".join(men_lines)
+
+
+def sync_men(men_csv: str) -> None:
+    """Push the men's HR rows and the shared dashboard page to the men's repo."""
+    with open(os.path.join(REPO_DIR, SHARED_PAGE), encoding="utf-8", newline="") as f:
+        page = f.read()
+    push_via_git({CSV_PATH: men_csv, SHARED_PAGE: page}, "chore: auto-sync HR data from SharePoint",
+                 GITHUB_TOKEN, MEN_GITHUB_REPO, MEN_REPO_DIR)
 
 
 def download_ipp_workbook() -> bytes:
@@ -196,11 +251,22 @@ def main():
     csv_text = to_csv_text(raw)
     print(f"  {csv_text.count(chr(10)):,} rows")
 
-    print("Step 3 — Converting IPP workbook...")
+    print("Step 3 — Splitting women's and men's rows...")
+    roster = load_men_roster()
+    men_csv = None
+    if roster:
+        csv_text, men_csv = split_hr_csv(csv_text, *roster)
+        print(f"  Women: {csv_text.count(chr(10)) - 1:,} rows · Men: {men_csv.count(chr(10)) - 1:,} rows")
+
+    print("Step 4 — Converting IPP workbook...")
     files = {CSV_PATH: csv_text, **load_ipp_files()}
 
-    print("Step 4 — Pushing to GitHub via git...")
+    print("Step 5 — Pushing women's dashboard to GitHub via git...")
     push_via_git(files, COMMIT_MESSAGE, GITHUB_TOKEN, GITHUB_REPO)
+
+    if men_csv is not None:
+        print("Step 6 — Pushing men's dashboard to GitHub via git...")
+        sync_men(men_csv)
 
     print("Done.")
 
