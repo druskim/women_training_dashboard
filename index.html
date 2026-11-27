@@ -621,6 +621,7 @@ function englishPart(v) { return v?.split(' / ')[0].trim() || ''; }
 const ATHLETE_ALIASES = {
   'maryam salizadeh':  'maryam salehizadeh',
   'maryam salehi':     'maryam salehizadeh',
+  'jade ondrik':       'jade ondirk',   // HR file is Jade_Ondrik.csv; she signs the questionnaire "Ondirk"
 };
 function resolveAlias(an) { return ATHLETE_ALIASES[an] || an; }
 
